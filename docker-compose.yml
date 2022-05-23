@@ -1,0 +1,22 @@
+version: "3.7"
+
+services:
+  elasticsearch:
+      image: elasticsearch:8.1.0
+      container_name: qa_elasticsearch
+      hostname: qa-elasticsearch
+      deploy:
+          resources:
+              limits:
+                memory: 4096M
+      ports:
+        - 9200:9200
+        - 9300:9300
+      volumes:
+        - elast_data:/usr/share/elasticsearch/data
+      environment:
+        - "discovery.type=single-node"
+        - "xpack.security.enabled=false"
+
+volumes:
+  elast_data:

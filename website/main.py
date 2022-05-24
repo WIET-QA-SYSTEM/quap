@@ -43,6 +43,9 @@ if evaluation_selectbox == 'Prefetched dataset':
             # Generate evaluation
             show_evaluation_result = get_evaluation_function(model_selected, dataset)
         st.success("Your evaluation is ready")
+        
+        show_evaluation_result()    
+
     
     st.markdown("""---""")
     question_input = st.text_input("Or enter Your question")
@@ -56,7 +59,7 @@ if evaluation_selectbox == 'Prefetched dataset':
             answer = get_answer_prefetched(model_selected, dataset, question_input)
             st.write("This is the result")
             st.write(answer)
-        
+    
     
 elif evaluation_selectbox == 'Custom dataset':    
     files = st.file_uploader(

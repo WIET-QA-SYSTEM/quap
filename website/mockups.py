@@ -9,5 +9,6 @@ def get_models_list() -> List[str]:
 
 def get_dataset_list() -> List[str]:
     return [
-        "squad"
+        "squad",
+        "adversarial_qa"
     ]

@@ -53,11 +53,11 @@ class PrefetchedDataset(Dataset):
 
         self._configure_elasticsearch(self._index_name)
         
-        if dataset_name not in ['squad']:
-            try:
-                dataset = load_dataset(dataset_name)
-            except Exception as ex:
-                raise ValueError('Dataset not supported') from ex
+        # if dataset_name not in ['squad', 'adversarial_qa']:
+        #     try:
+        #         dataset = load_dataset(dataset_name)
+        #     except Exception as ex:
+        #         raise ValueError('Dataset not supported') from ex
         
         if dataset_name == 'squad':
             # using https://github.com/deepset-ai/haystack/blob/master/haystack/utils/squad_data.py
@@ -71,9 +71,14 @@ class PrefetchedDataset(Dataset):
             # self._document_store.write_labels(labels)
 
 
-        elif dataset_name == 'piqa':
-            # parse piqa dataset
-            pass
+        elif dataset_name == 'adversarial_qa':
+            self._path = DatasetDownloader.download_adversarial_qa()
+            data = SquadData.from_file(self._path / 'combined' / 'train.json')
+
+            docs = data.documents
+            self._document_store.write_documents(docs)
+
+            self._labels = data.to_label_objs()
         else:
             raise ValueError('Dataset not supported')
 

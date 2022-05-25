@@ -64,7 +64,8 @@ class SquadData(SquadData):
                 for question in paragraph["qas"]:
                     q = question["question"]
                     qid = question["id"]
-                    is_impossible = question["is_impossible"]
+                    is_impossible = question.get("is_impossible", False)
+                    question["is_impossible"] = is_impossible
 
                     # For no_answer samples
                     if len(question["answers"]) == 0:

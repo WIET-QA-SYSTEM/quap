@@ -1,11 +1,15 @@
+from pathlib import Path
+from typing import List
 import uuid
 import os
 
 from datasets import load_dataset
-import pandas as pd
 
 import haystack as hs
 from haystack.document_stores import ElasticsearchDocumentStore
+
+from .downloader import DatasetDownloader
+from .utils import SquadData
 
 
 class Dataset:
@@ -13,12 +17,17 @@ class Dataset:
     def document_store(self):
         return self._document_store
 
+    @property
+    def data_dir(self) -> Path:
+        return self._path
+
     def _configure_elasticsearch(self, index_name: str) -> None:
         self._document_store = ElasticsearchDocumentStore(
             host=os.getenv('ELASTICSEARCH_HOST', 'localhost'),
             port=int(os.getenv('ELASTICSEARCH_PORT', 9200)),
             scheme=os.getenv('ELASTICSEARCH_SCHEME', 'http'),
-            index=index_name
+            index=index_name,
+            label_index=index_name + '_labels'
         )
 
     # def list_documents(self) -> List[str]:
@@ -44,37 +53,31 @@ class PrefetchedDataset(Dataset):
 
         self._configure_elasticsearch(self._index_name)
         
-        try:
-            dataset = load_dataset(dataset_name)
-        except Exception as ex:
-            raise ValueError('Dataset not supported') from ex
+        if dataset_name not in ['squad']:
+            try:
+                dataset = load_dataset(dataset_name)
+            except Exception as ex:
+                raise ValueError('Dataset not supported') from ex
         
         if dataset_name == 'squad':
             # using https://github.com/deepset-ai/haystack/blob/master/haystack/utils/squad_data.py
+            self._path = DatasetDownloader.download_squad()
+            data = SquadData.from_file(self._path / 'train.json')
 
-            dataset = pd.concat([
-                dataset['train'].to_pandas(),
-                dataset['validation'].to_pandas()
-            ])
-
-            docs = [hs.Document(text) for text in dataset['context'].unique()]
-            data = dataset.to_dict('records')
-
-            labels = [
-                hs.Label(
-                    query=rd['question'],
-                    answer=hs.Answer(),
-                    is_correct_answer=True,
-                    is_correct_document=True,
-                    id=rd['id'],
-                    origin='gold-label'
-                )
-                for rd in data
-            ]
+            docs = data.documents
+            self._document_store.write_documents(docs)
+            
+            self._labels = data.to_label_objs()
+            # self._document_store.write_labels(labels)
 
 
         elif dataset_name == 'piqa':
             # parse piqa dataset
             pass
         else:
-            raise ValueError('Dataset not supported')  
+            raise ValueError('Dataset not supported')
+
+    @property
+    def labels(self) -> List[hs.Label]:
+        # return self._document_store.get_all_labels()
+        return self._labels

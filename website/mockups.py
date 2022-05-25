@@ -2,10 +2,7 @@ from typing import List
 
 def get_models_list() -> List[str]:  
     return [
-        "Model 1",
-        "Model 2", 
-        "Model 3",
-        "Model 4"
+        "deepset/roberta-base-squad2"
     ]
 
 def get_dataset_list() -> List[str]:

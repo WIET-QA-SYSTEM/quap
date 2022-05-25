@@ -1,5 +1,3 @@
-from email.policy import default
-from pkgutil import get_data
 from interface import get_answer_uploaded, get_answer_prefetched, get_evaluation_function
 import streamlit as st
 import os
@@ -104,9 +102,10 @@ elif evaluation_selectbox == 'Custom dataset':
             if len(question_input.strip()) == 0:
                 st.warning("Question should not be empty")
             else:
-                answer = get_answer_uploaded(
-                    model_selected, st.session_state.selected_uploaded_dataset,
-                    question_input)
-                st.write("This is the result")
+                with st.spinner("Searching for an answer..."):
+                    answer = get_answer_uploaded(
+                        model_selected, st.session_state.selected_uploaded_dataset, DATASETS_PATH,
+                        question_input)
+                st.write("Answer:")
                 st.write(answer)
         

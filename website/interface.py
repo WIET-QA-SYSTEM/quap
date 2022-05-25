@@ -1,12 +1,21 @@
 import logging
 import streamlit as st
-import json
+import os
 
-def get_answer_uploaded(model_name: str, uploaded_dataset_name: str, question: str) -> str:
+from qa.dataset import UploadedDataset
+from qa.system import QASystem
+
+
+def get_answer_uploaded(model_name: str, uploaded_dataset_name: str, datasets_path: str, question: str) -> str:
     logging.info(f"""Requested answer with model {model_name}
                  on uploaded dataset {uploaded_dataset_name}:
                  {question}""")
-    pass
+    qa = QASystem(model_name)
+    dataset = UploadedDataset(os.path.join(datasets_path, uploaded_dataset_name))
+
+    answers = qa.ask(dataset, question)
+
+    return answers[0].answer
 
 def get_answer_prefetched(model_name: str, prefetched_dataset_name: str, question: str) -> str:
     logging.info(f"""Requested answer with model {model_name}

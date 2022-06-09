@@ -1,0 +1,4 @@
+streamlit==1.9.0
+farm-haystack==1.4.0
+datasets==2.2.2
+numba==0.55.1

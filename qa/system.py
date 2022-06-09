@@ -10,13 +10,8 @@ class QASystem:
     def __init__(self, model_name: str, device: str = 'cpu'):
         # FIXME had problem with num_processes not specified  https://stackoverflow.com/questions/67625238/get-error-nonetype-object-has-no-attribute-dumps-when-load-model-in-haystack
         # self._reader = FARMReader(model_name, use_gpu=(device!='cpu'), num_processes=0)
-<<<<<<< HEAD
-        self._reader = FARMReader(model_name, use_gpu=True)
-        # self._reader = FARMReader(model_name, use_gpu=False)
-=======
         # self._reader = FARMReader(model_name, use_gpu=True)
         self._reader = FARMReader(model_name, use_gpu=False)
->>>>>>> 1b2a6dc36dcdb5ffce63d341834313f711f4e37b
         
     def _prepare_pipeline(self, dataset: Dataset):
         retriever = BM25Retriever(dataset._document_store)

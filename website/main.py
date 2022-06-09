@@ -54,6 +54,7 @@ if evaluation_selectbox == 'Prefetched dataset':
         if len(question_input.strip()) == 0:
             st.warning("Question should not be empty")
         else:
+<<<<<<< HEAD
             answer_data  = get_answer_prefetched(model_selected, dataset, question_input)
             answer = answer_data.answer
             context = answer_data.context
@@ -61,6 +62,11 @@ if evaluation_selectbox == 'Prefetched dataset':
             st.write(answer)
             with st.expander("Answer context"):
                 st.write(context)
+=======
+            answer = get_answer_prefetched(model_selected, dataset, question_input)
+            st.write("This is the result")
+            st.write(answer)
+>>>>>>> 1b2a6dc36dcdb5ffce63d341834313f711f4e37b
     
     
 elif evaluation_selectbox == 'Custom dataset':    
@@ -106,6 +112,7 @@ elif evaluation_selectbox == 'Custom dataset':
             if len(question_input.strip()) == 0:
                 st.warning("Question should not be empty")
             else:
+<<<<<<< HEAD
                 with st.spinner("Searching for an answer..."):    
                     answer_data = get_answer_uploaded(
                         model_selected, st.session_state.selected_uploaded_dataset, DATASETS_PATH,
@@ -116,4 +123,12 @@ elif evaluation_selectbox == 'Custom dataset':
                 st.write(answer)
                 with st.expander("Answer context"):
                     st.write(context)
+=======
+                with st.spinner("Searching for an answer..."):
+                    answer = get_answer_uploaded(
+                        model_selected, st.session_state.selected_uploaded_dataset, DATASETS_PATH,
+                        question_input)
+                st.write("Answer:")
+                st.write(answer)
+>>>>>>> 1b2a6dc36dcdb5ffce63d341834313f711f4e37b
         

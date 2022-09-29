@@ -15,6 +15,8 @@ jobs:
           python-version: 3.9.12
       - name: Load .env file
         uses: xom9ikk/dotenv@v1.0.2
+        with:
+          path: /app
       - name: Install dependencies
         run: pip install -e .
       - name: Show installed dependencies

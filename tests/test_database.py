@@ -3,9 +3,9 @@ import os
 
 import pytest
 
-from data_storage.config import documents_path
-from data_storage.schema import Base, DataCorpus, Document
-from data_storage.schema import BaseSession
+from quap.data.config import documents_path
+from quap.data.schema import Base, DataCorpus, Document
+from quap.data.schema import BaseSession
 
 
 @pytest.fixture(scope='module')

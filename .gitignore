@@ -132,7 +132,7 @@ dmypy.json
 .pyre/
 
 **.idea/
-#**.db
+**.db
 **.pyc
 .pytest_cache/
 __pycache__

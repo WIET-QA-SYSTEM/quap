@@ -3,8 +3,8 @@ version: "3.7"
 services:
   elasticsearch:
       image: elasticsearch:8.1.0
-      container_name: qa_elasticsearch
-      hostname: qa-elasticsearch
+      container_name: quap_elasticsearch
+      hostname: quap-elasticsearch
       deploy:
           resources:
               limits:

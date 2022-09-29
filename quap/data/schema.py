@@ -1,62 +1,31 @@
-from uuid import uuid4
-import shutil, logging, os
+import os
 
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.orm.session import Session
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine
+from sqlalchemy import event
+from haystack.document_stores import ElasticsearchDocumentStore
+from haystack.nodes import DensePassageRetriever, ElasticsearchRetriever
+from haystack import Document
 
-from .config import engine_path, documents_path
-
-
-logger = logging.getLogger('quap')
-
-
-if not os.path.exists(documents_path) or not os.path.isdir(documents_path):
-    try:
-        shutil.rmtree(documents_path)
-    except:
-        pass
-    os.makedirs(documents_path)
-
+from .config import engine_path, documents_path, dpr_cache_path
+from uuid import uuid4
 
 Base = declarative_base()
 
+def generate_uuid():
+    return str(uuid4())
 
-class Document(Base):
-    # An UTF-8 formatted document, saved locally
-    __tablename__ = 'document'
+def get_storage_config():
+    config = {
+        'update_existing_documents': True,
+        'host': os.environ['elastic_search_host'],
+        'port': os.environ['elastic_search_port']
+    }
 
-    id = Column(Integer, primary_key=True)
-    # Reference to the data corpus containing the given document
-    data_corpus_id = Column(Integer, ForeignKey('data_corpus.id'))
-    # How is the file saved locally
-    path = Column(String, nullable=False)
-    # What was the file's name when it was uploaded by the user
-    upload_name = Column(String, nullable=False)
-
-    @property
-    def text(self):
-        if '_text_cache' in self:
-            return self._text_cache
-        else:
-            with open(self.path, 'r') as f:
-                self._text_cache = f.read()
-            return self._text_cache
-
-    @text.setter
-    def text(self, value):
-        raise AttributeError(
-            "Document's text cannot be set, please use DataCorpus.upload_document to replace content.")
-
-
-@event.listens_for(Document, 'after_delete')
-def remove_file_on_drive(mapper, connection, target):
-    logger.info(f"Removing file {target.path} (it was deleted from the database)")
-    if os.path.exists(target.path):
-        os.remove(target.path)
-
+    return config
 
 class DataCorpus(Base):
     __tablename__ = 'data_corpus'
@@ -64,45 +33,34 @@ class DataCorpus(Base):
     id = Column(Integer, primary_key=True)
     # Name of the data corpus
     name = Column(String, nullable=False)
+    
+    # UID of the DPR embedding storage index
+    dpr_uuid = Column(String, nullable=False, default=generate_uuid)
 
-    documents = relationship(
-        'Document', cascade='all,delete', backref="data_corpus")
+    # UID of the ElasticSearch embedding storage index
+    elastic_search_uuid = Column(String, nullable=False, default=generate_uuid)
 
-    def upload_document(self, session: Session, upload_name: str, content: str):
-        """Adds a new document to the data corpus.
-        If a document with the same upload name already exists, 
-        it will be replaced"""
+    def get_storage(self, retriever):
+        if retriever == 'dpr':
+            return ElasticsearchDocumentStore(**get_storage_config(), index=self.dpr_uuid)
+        elif retriever == 'elastic_search':
+            return ElasticsearchDocumentStore(**get_storage_config(), index=self.elastic_search_uuid)
 
-        # Check if document with the same upload name already exists
-        existing_docs = session.query(Document).filter(
-            Document.data_corpus_id == self.id, Document.upload_name == upload_name.strip()).all()
+    def get_retriever(self, retriever):
+        if retriever == 'dpr':
+            return DensePassageRetriever(self.get_storage('dpr'))
+        elif retriever == 'elastic_saerch':
+            return ElasticsearchRetriever(self.get_storage('elastic_search'))
 
-        for document in existing_docs:
-            session.delete(document)
+    def add_document(self, document_name, document_text):
+        dpr_storage = self.get_storage('dpr')  # ??
+        elastic_search_storage = self.get_storage('elastic_search')
 
-        filename = None
-        while True:
-            filename = str(uuid4())
-            # The chance of repeating an uuid is neglectable, but check for it nevertheless
-            if not os.path.exists(os.path.join(documents_path, f"{filename}.txt")):
-                break
+        document_repr = Document(content=document_text, id=document_name, content_type='text')
 
-        filename += ".txt"
-
-        # Save a file to the drive
-        with open(os.path.join(documents_path, filename), 'w') as file:
-            file.write(content)
-
-        new_document = Document(data_corpus_id=self.id, path=os.path.join(
-            documents_path, filename), upload_name=upload_name.strip())
-
-        session.add(
-            new_document
-        )
-
-        session.commit()
-
-        return new_document
+        dpr_storage.write_documents(documents=[document_repr], index=self.dpr_uuid)
+        dpr_storage.update_embeddings(self.get_retriever('dpr'))
+        elastic_search_storage.write_documents(documents=[document_repr], index=self.elastic_search_uuid)
 
 
 class Dataset(Base):
@@ -114,7 +72,6 @@ class Dataset(Base):
     data_corpus = relationship(DataCorpus)
     # Name of the dataset
     name = Column(String, nullable=False)
-
 
 engine = create_engine(engine_path)
 

@@ -13,8 +13,11 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9.12
-      - name: Dotenv Action
-        uses: falti/dotenv-action@v0.2.8
+      - name: Load .env file
+        uses: xom9ikk/dotenv@v1.0.2
+        with:
+          path: custom/path/to/folder/with/env
+          mode: development
       - name: Install dependencies
         run: pip install -e .
       - name: Show installed dependencies

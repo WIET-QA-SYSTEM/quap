@@ -1,16 +1,14 @@
 import os
 
-from sqlalchemy import Column, ForeignKey, Integer, String, Date
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy.orm.session import Session
 from sqlalchemy import create_engine
-from sqlalchemy import event
 from haystack.document_stores import ElasticsearchDocumentStore
 from haystack.nodes import DensePassageRetriever, ElasticsearchRetriever
 from haystack import Document
 
-from .config import engine_path, documents_path, dpr_cache_path
+from .config import engine_path
 from uuid import uuid4
 
 Base = declarative_base()
@@ -53,7 +51,7 @@ class DataCorpus(Base):
             return ElasticsearchRetriever(self.get_storage('elastic_search'))
 
     def add_document(self, document_name, document_text):
-        dpr_storage = self.get_storage('dpr')  # ??
+        dpr_storage = self.get_storage('dpr')
         elastic_search_storage = self.get_storage('elastic_search')
 
         document_repr = Document(content=document_text, id=document_name, content_type='text')

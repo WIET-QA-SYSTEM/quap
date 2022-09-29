@@ -3,7 +3,6 @@ import os
 
 import pytest
 
-from quap.data.config import documents_path
 from quap.data.schema import Base, DataCorpus, Document
 from quap.data.schema import BaseSession
 

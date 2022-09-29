@@ -13,6 +13,8 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9.12
+      - name: Dotenv Action
+        uses: falti/dotenv-action@v0.2.8
       - name: Install dependencies
         run: pip install -e .
       - name: Show installed dependencies

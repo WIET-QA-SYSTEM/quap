@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from quap.data.schema import Base, DataCorpus, Document
+from quap.data.schema import DataCorpus, Document
 from quap.data.schema import BaseSession
 
 

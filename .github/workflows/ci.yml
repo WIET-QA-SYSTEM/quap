@@ -14,11 +14,11 @@ jobs:
         with:
           python-version: 3.9.12
       - name: Find
-        run: ls -aR /
+        run: find ~ -type f -name .env
       - name: Load .env file
         uses: xom9ikk/dotenv@v1.0.2
         with:
-          path: /app
+          path: ./
       - name: Install dependencies
         run: pip install -e .
       - name: Show installed dependencies

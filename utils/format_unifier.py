@@ -1,20 +1,27 @@
 from pathlib import Path
 from pptx import Presentation
+from PyPDF2 import PdfFileReader
+from tika import parser
+from tika_client import TikaClient
 
 
 class FormatUnifier:
-    def extract_text_from_document(self, path_to_file: str) -> bytes:
+    def __init__(self, host: str, port: int) -> None:
+        self._tika_client = TikaClient(host, port)
+
+    def extract_bytes_from_document(self, path_to_file: str) -> str:
         path = Path(path_to_file)
         if not path.exists():
             raise FileExistsError
         if path.suffix == '.pdf':
-            return path.read_bytes()
+            pdf = path.open("rb")
+            self._tika_client.extract(pdf)
         elif path.suffix == '.pptx':
             return self.extract_from_pptx(path)
 
     @staticmethod
-    def extract_from_pptx(pdf: Path) -> bytes:
-        f = pdf.open("rb")
+    def extract_from_pptx(pptx: Path) -> str:
+        f = pptx.open("rb")
         prs = Presentation(f)
         text: str = ""
         for slide in prs.slides:
@@ -25,4 +32,9 @@ class FormatUnifier:
                     for t in paragraph.runs:
                         text += ' /n '
                         text += t.text
-        return text.encode('utf-8')
+        return text
+
+
+f = FormatUnifier()
+lal = f.extract_bytes_from_document("D:\Studia\Inne\data\sample.pdf")
+print(lal)

@@ -7,12 +7,11 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.orm.session import Session
 from sqlalchemy import create_engine, event
 
-from .config import engine_path, documents_path
-
 
 logger = logging.getLogger('quap')
 
 
+documents_path = os.environ['DOCUMENTS_PATH']
 if not os.path.exists(documents_path) or not os.path.isdir(documents_path):
     try:
         shutil.rmtree(documents_path)
@@ -116,7 +115,7 @@ class Dataset(Base):
     name = Column(String, nullable=False)
 
 
-engine = create_engine(engine_path)
+engine = create_engine(os.environ['ENGINE_PATH'])
 
 Base.metadata.create_all(engine)
 

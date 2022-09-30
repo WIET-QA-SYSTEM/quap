@@ -1,22 +1,21 @@
 from uuid import UUID
 
 from sqlalchemy.orm import Session
-from sqlalchemy.engine import Engine
 
 from .models import DataCorpus, Dataset
 
 
 class BaseSQLAlchemyRepository:
-    def __init__(self, engine: Engine) -> None:
-        self.session = Session(bind=engine)
+    def __init__(self, session: Session) -> None:
+        self.session = session
 
     def commit(self) -> None:
         self.session.commit()
 
 
 class DataCorpusRepository(BaseSQLAlchemyRepository):
-    def __init__(self, engine: Engine) -> None:
-        super().__init__(engine)
+    def __init__(self, session: Session) -> None:
+        super().__init__(session)
 
     def add(self, corpus: DataCorpus) -> None:
         self.session.add(corpus)
@@ -29,8 +28,8 @@ class DataCorpusRepository(BaseSQLAlchemyRepository):
 
 
 class DatasetRepository(BaseSQLAlchemyRepository):
-    def __init__(self, engine: Engine) -> None:
-        super().__init__(engine)
+    def __init__(self, session: Session) -> None:
+        super().__init__(session)
 
     def add(self, dataset: Dataset) -> None:
         self.session.add(dataset)

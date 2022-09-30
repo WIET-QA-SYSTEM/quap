@@ -2,23 +2,15 @@ from uuid import uuid4
 import os
 
 import pytest
-
-from sqlalchemy import create_engine
-from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session
 
 from quap.data import DataCorpus, Dataset
 from quap.data.repository import DataCorpusRepository, DatasetRepository
 
 
-@pytest.fixture(scope='module')
-def engine() -> Engine:
-    engine = create_engine(os.environ['POSTGRESQL_CONNECTION_STRING'])
-    return engine
-
-
-def test_data_corpus_repository_adding(engine: Engine):
-    repo = DataCorpusRepository(engine)
-    session = repo.session
+@pytest.mark.integration_test
+def test_data_corpus_repository_adding(session: Session):
+    repo = DataCorpusRepository(session)
 
     corpus = DataCorpus('sample_corpus')
     repo.add(corpus)
@@ -28,15 +20,16 @@ def test_data_corpus_repository_adding(engine: Engine):
     assert list(rows) == [('sample_corpus', None, None)]
 
 
-def test_data_corpus_repository_getting(engine: Engine):
-    repo = DataCorpusRepository(engine)
-    session = repo.session
+@pytest.mark.integration_test
+def test_data_corpus_repository_getting(session: Session):
+    repo = DataCorpusRepository(session)
 
     data_corpus_id = uuid4()
     elasticsearch_uuid = uuid4()
 
-    session.execute('INSERT INTO data_corpora (id, name, dpr_uuid, elasticsearch_uuid)'
-                    f'VALUES ({data_corpus_id}, "another_corpus", null, {elasticsearch_uuid})')
+    session.execute('INSERT INTO data_corpora (id, name, dpr_uuid, elasticsearch_uuid) '
+                    'VALUES (:data_corpus_id, \'another_corpus\', null, :elasticsearch_uuid)',
+                    {'data_corpus_id': data_corpus_id, 'elasticsearch_uuid': elasticsearch_uuid})
 
     corpus = repo.get(data_corpus_id)
 

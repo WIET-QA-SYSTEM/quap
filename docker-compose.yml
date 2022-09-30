@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   elasticsearch:
-    image: elasticsearch
+    image: elasticsearch:8.4.2
     container_name: quap-elasticsearch
     hostname: quap-elasticsearch
     deploy:

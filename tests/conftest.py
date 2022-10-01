@@ -18,7 +18,7 @@ def engine() -> Engine:
 @pytest.fixture
 def session(engine: Engine) -> Session:
     start_mappers()
-    session = sessionmaker(bind=engine)()
+    session = sessionmaker(bind=engine, expire_on_commit=False)()
     yield session
     clear_mappers()
 

@@ -18,6 +18,11 @@ def engine() -> Engine:
 @pytest.fixture
 def session(engine: Engine) -> Session:
     start_mappers()
-    yield sessionmaker(bind=engine)()
+    session = sessionmaker(bind=engine)()
+    yield session
     clear_mappers()
 
+    for table in reversed(metadata.sorted_tables):
+        session.execute(f"TRUNCATE {table.name} RESTART IDENTITY CASCADE;")
+
+    session.commit()

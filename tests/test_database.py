@@ -1,97 +1,109 @@
 from uuid import uuid4
-import os
 
 import pytest
+from sqlalchemy.orm import Session
 
-from quap.data.schema import DataCorpus, Document
-from quap.data.schema import BaseSession
+from quap.data import DataCorpus, Dataset
+from quap.data.repository import DataCorpusRepository, DatasetRepository
 
-
-@pytest.fixture(scope='module')
-def session() -> BaseSession:
-    session = BaseSession()
-    return session
+from helpers import generate_random_data_corpora, generate_random_datasets
 
 
-def test_creation_removal(session: BaseSession):
-    # Create data corpus
-    corpus = DataCorpus(name='sample_corpus')
-    session.add(corpus)
+@pytest.mark.integration_test
+def test_data_corpus_repository_adding(session: Session):
+    repo = DataCorpusRepository(session)
+
+    corpus = DataCorpus('sample_corpus')
+    repo.add(corpus)
+    repo.commit()
+
+    rows = session.execute('SELECT name, dpr_uuid, elasticsearch_uuid FROM data_corpora')
+    assert list(rows) == [('sample_corpus', None, None)]
+
+
+@pytest.mark.integration_test
+def test_data_corpus_repository_getting(session: Session):
+    repo = DataCorpusRepository(session)
+
+    data_corpus_id = uuid4()
+    elasticsearch_uuid = uuid4()
+
+    session.execute('INSERT INTO data_corpora (id, name, dpr_uuid, elasticsearch_uuid) '
+                    'VALUES (:data_corpus_id, \'another_corpus\', null, :elasticsearch_uuid)',
+                    {'data_corpus_id': data_corpus_id, 'elasticsearch_uuid': elasticsearch_uuid})
     session.commit()
 
-    # Add a document to it
-    added_object = corpus.upload_document(
-        session, "sample_document.pdf", "sample document_content")
+    corpus = repo.get(data_corpus_id)
 
-    # File should now exist on drive
-    assert os.path.exists(added_object.path), \
-        "File added to database but not existing on drive!"
+    assert corpus.id == data_corpus_id
+    assert corpus.name == 'another_corpus'
+    assert corpus.dpr_uuid is None
+    assert corpus.elasticsearch_uuid == elasticsearch_uuid
 
-    # Now remove the document
-    session.delete(added_object)
+
+@pytest.mark.integration_test
+def test_data_corpus_repository_listing(session: Session):
+    repo = DataCorpusRepository(session)
+
+    corpora = generate_random_data_corpora(10)
+    for corpus in corpora:
+        repo.add(corpus)
+    repo.commit()
+
+    assert repo.list() == corpora
+
+
+@pytest.mark.integration_test
+def test_dataset_repository_adding(session: Session):
+    repo = DatasetRepository(session)
+
+    corpus = DataCorpus('anabilitics')
+    dataset = Dataset('anabilitics', corpus)
+
+    repo.add(dataset)
+    repo.commit()
+
+    corpora_rows = session.execute('SELECT name, dpr_uuid, elasticsearch_uuid FROM data_corpora')
+    assert list(corpora_rows) == [('anabilitics', None, None)]
+
+    dataset_rows = session.execute('SELECT name, data_corpus_id FROM datasets')
+    assert list(dataset_rows) == [('anabilitics', corpus.id)]
+
+
+@pytest.mark.integration_test
+def test_dataset_repository_getting(session: Session):
+    repo = DatasetRepository(session)
+
+    data_corpus_id = uuid4()
+    dataset_id = uuid4()
+
+    session.execute('INSERT INTO data_corpora (id, name, dpr_uuid, elasticsearch_uuid) '
+                    'VALUES (:data_corpus_id, \'another_corpus\', null, null)',
+                    {'data_corpus_id': data_corpus_id})
+
+    session.execute('INSERT INTO datasets (id, name, data_corpus_id) '
+                    'VALUES (:dataset_id, \'another_dataset\', :data_corpus_id)',
+                    {'dataset_id': dataset_id, 'data_corpus_id': data_corpus_id})
     session.commit()
 
-    # File should disappear from drive
-    assert not os.path.exists(added_object.path), \
-        "File removed from database but file content remaining on drive!"
+    dataset = repo.get(dataset_id)
 
-    session.delete(corpus)
-    session.commit()
+    assert dataset.id == dataset_id
+    assert dataset.name == 'another_dataset'
 
-
-def test_content_replaced(session: BaseSession):
-    # Create data corpus
-    corpus = DataCorpus(name='sample_corpus')
-    session.add(corpus)
-    session.commit()
-
-    # Add a document to it
-    first_object = corpus.upload_document(
-        session, "sample_document.pdf", "sample document_content")
-
-    # Add another document with the same name but another content
-    added_object = corpus.upload_document(
-        session, "sample_document.pdf", "new_test_content")
-
-    # Content of the file should be replaced
-    document = session.query(Document).filter(
-        Document.upload_name == 'sample_document.pdf', Document.data_corpus_id == corpus.id).one()
-
-    with open(document.path, 'r') as f:
-        assert f.read() == "new_test_content", \
-            "Failed to replace file content with new text"
-
-    # Old file should be deleted
-    assert not os.path.exists(first_object.path), \
-        "After file replacement, previous content has not been removed"
-
-    session.delete(corpus)
-    session.commit()
+    assert dataset.corpus.id == data_corpus_id
+    assert dataset.corpus.name == 'another_corpus'
+    assert dataset.corpus.dpr_uuid is None
+    assert dataset.corpus.elasticsearch_uuid is None
 
 
-def test_cascade_deletion(session: BaseSession):
-    # Create data corpus
-    corpus = DataCorpus(name='sample_corpus')
-    session.add(corpus)
-    session.commit()
+@pytest.mark.integration_test
+def test_dataset_repository_listing(session: Session):
+    repo = DatasetRepository(session)
 
-    # Add multiple documents to the corpus
-    document_objects = [
-        corpus.upload_document(session, name, 'content') for name in ['n1.pdf', 'n2.pdf']
-    ]
+    datasets = generate_random_datasets(10)
+    for dataset in datasets:
+        repo.add(dataset)
+    repo.commit()
 
-    # Remove the corpus
-    session.delete(corpus)
-    session.commit()
-
-    # Documents should be gone from the database AND the drive
-    for document in document_objects:
-        assert len(
-            session
-            .query(Document)
-            .filter(Document.id == document.id)
-            .all()
-        ) == 0, "Corpus removed but document remains in the database"
-
-        assert not os.path.exists(document.path), \
-            "Corpus removed but document remains on the drive"
+    assert repo.list() == datasets

@@ -2,21 +2,35 @@ version: "3.7"
 
 services:
   elasticsearch:
-      image: elasticsearch:8.1.0
-      container_name: quap_elasticsearch
-      hostname: quap-elasticsearch
-      deploy:
-          resources:
-              limits:
-                memory: 4096M
-      ports:
-        - 9200:9200
-        - 9300:9300
-      volumes:
-        - elast_data:/usr/share/elasticsearch/data
-      environment:
-        - "discovery.type=single-node"
-        - "xpack.security.enabled=false"
+    image: elasticsearch:8.4.2
+    container_name: quap-elasticsearch
+    hostname: quap-elasticsearch
+    deploy:
+        resources:
+            limits:
+              memory: 4096M
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - quap_volume_elasticsearch_data:/usr/share/elasticsearch/data
+    environment:
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"
+
+  postgresql:
+    image: postgres
+    container_name: quap-postgresql
+    hostname: quap-postgresql
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - quap_volume_postgres_data:/var/lib/postgresql/data/
 
 volumes:
-  elast_data:
+  quap_volume_elasticsearch_data:
+  quap_volume_postgres_data:

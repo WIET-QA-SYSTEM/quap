@@ -1,4 +1,4 @@
-from haystack.document_stores import ElasticsearchDocumentStore
+from .fragmented_store import CorpusFragmentedStore
 import os
 
 elasticsearch_config = {
@@ -7,4 +7,4 @@ elasticsearch_config = {
     'port': os.environ['ELASTICSEARCH_PORT'],
 }
 
-ELASTIC_SEARCH_STORAGE = ElasticsearchDocumentStore(**elasticsearch_config, index='default')
+ELASTIC_SEARCH_STORAGE = CorpusFragmentedStore(**elasticsearch_config, index='default')

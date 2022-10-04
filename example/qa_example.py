@@ -17,27 +17,30 @@ from quap.data.orm import start_mappers
 from quap.data.document_store import ELASTIC_SEARCH_STORAGE
 from quap.ml.indexed_retrievers import IndexedBM25, IndexedDPR
 from quap.ml.qa.qa_pipeline import QAPipeline
+from quap.data.orm import metadata
 
 # Create a data corpus
 engine = create_engine("postgresql://postgres:postgres@localhost:5432/postgres")
+metadata.create_all(engine)
 session = sessionmaker(bind=engine, expire_on_commit=False)()
 
 start_mappers()
 
 corpus_repository = DataCorpusRepository(session)
-corpus = DataCorpus('example_corpus_' + str(uuid4)[:32])
-corpus_repository.add(corpus)
+corpus = DataCorpus(name='test')#name='example_corpus_' + str(uuid4())[:32])
 
+corpus_repository.add(corpus)
+corpus_repository.commit()
 
 with open('epic_of_gilgamesh.txt', 'r') as book:
     book_content = book.read()
 
-corpus.add_document(ELASTIC_SEARCH_STORAGE, 'Epic of Gilgamesh', book_content)
+ELASTIC_SEARCH_STORAGE.add_document(session, corpus, 'Epic of Gilgamesh', book_content)
 
 with open('kubica.txt', 'r') as book:
     book_content = book.read()
 
-corpus.add_document(ELASTIC_SEARCH_STORAGE, 'Robert Kubica', book_content)
+ELASTIC_SEARCH_STORAGE.add_document(session, corpus, 'Robert Kubica', book_content)
 
 # Create a reader & retriever
 

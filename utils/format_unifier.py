@@ -2,7 +2,7 @@ from pathlib import Path
 from pptx import Presentation
 from PyPDF2 import PdfFileReader
 from tika import parser
-from tika_client import TikaClient
+from utils.tika_client import TikaClient
 
 
 class FormatUnifier:
@@ -34,7 +34,8 @@ class FormatUnifier:
                         text += t.text
         return text
 
-
+'''
 f = FormatUnifier()
 lal = f.extract_bytes_from_document("D:\Studia\Inne\data\sample.pdf")
 print(lal)
+'''

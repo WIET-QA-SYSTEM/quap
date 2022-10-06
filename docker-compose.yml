@@ -17,6 +17,12 @@ services:
       environment:
         - "discovery.type=single-node"
         - "xpack.security.enabled=false"
+  tika:
+      image: apache/tika:latest
+      container_name: quap_tika
+      hostname: quap-tika
+      ports:
+      - 9998:9998
 
 volumes:
   elast_data:

@@ -1,15 +1,17 @@
-import os
-import shutil
+from uuid import uuid4
+import shutil, logging, os
 
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.orm.session import Session
-from sqlalchemy import create_engine
-from sqlalchemy import event
+from sqlalchemy import create_engine, event
 
 from .config import engine_path, documents_path
-from uuid import uuid4
+
+
+logger = logging.getLogger('quap')
+
 
 if not os.path.exists(documents_path) or not os.path.isdir(documents_path):
     try:
@@ -51,7 +53,7 @@ class Document(Base):
 
 @event.listens_for(Document, 'after_delete')
 def remove_file_on_drive(mapper, connection, target):
-    print("Removing file ", target.path)
+    logger.info(f"Removing file {target.path} (it was deleted from the database)")
     if os.path.exists(target.path):
         os.remove(target.path)
 
@@ -81,7 +83,7 @@ class DataCorpus(Base):
         filename = None
         while True:
             filename = str(uuid4())
-            # The chance of repeating an uuid is extremally small, but check for it nevertheless
+            # The chance of repeating an uuid is neglectable, but check for it nevertheless
             if not os.path.exists(os.path.join(documents_path, f"{filename}.txt")):
                 break
 

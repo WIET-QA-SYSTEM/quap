@@ -12,6 +12,7 @@ def test_extract_from_pptx():
         "PowerPoint keyword should be in extracted string"
 
 
+@pytest.mark.integration_test
 def test_extract_from_pdf():
     t = format_unifier.extract_text(TEST_DATA_PATH / "sample.pdf")
     assert "small demonstration" in t, \

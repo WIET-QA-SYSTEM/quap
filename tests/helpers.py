@@ -1,7 +1,12 @@
 from typing import List
 import uuid, random, string
-
+from pathlib import Path
 from quap.data import DataCorpus, Dataset
+
+TESTS_ROOT_PATH = Path(__file__).parent
+TEST_DATA_PATH = TESTS_ROOT_PATH / 'data'
+
+ENV_PATH = TEST_DATA_PATH.parent / '.env'
 
 
 def is_valid_uuid(val):

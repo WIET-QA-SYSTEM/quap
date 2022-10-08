@@ -3,7 +3,7 @@ SQLAlchemy==1.4.36
 farm-haystack==1.9.0
 python-dotenv==0.21.0
 psycopg2==2.9.3
-
+torch==1.12
 setuptools~=50.3.1
 requests~=2.24.0
 pypdf2~=2.11.0

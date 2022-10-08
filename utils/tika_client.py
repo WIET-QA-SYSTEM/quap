@@ -1,4 +1,5 @@
 import requests
+from tika import language
 
 
 class TikaClient:
@@ -22,3 +23,14 @@ class TikaClient:
 
     def extract(self, pdf: bytes) -> str:
         return self._tika(pdf)
+
+    def _language(self, text: str) -> str:
+        response = requests.put(self._url_join('language', 'string'), headers={
+            'Content-Type': 'text/plain',
+            'Accept': 'text/plain'
+        }, data=text.encode('utf-8'))
+
+        return response.content.decode('utf-8')
+
+    def detect_language(self, text: str) -> str:
+        return self._language(text)

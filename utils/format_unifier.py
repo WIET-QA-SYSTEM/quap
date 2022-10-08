@@ -35,3 +35,6 @@ class FormatUnifier:
                     for t in paragraph.runs:
                         text_fragments.append(t.text)
         return "\n".join(text_fragments)
+
+    def detect_language(self, text: str) -> str:
+        return self._tika_client.detect_language(text)

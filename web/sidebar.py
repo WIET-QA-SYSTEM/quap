@@ -5,11 +5,16 @@ from model_selection.selected_models import RetrieverType, SelectedModels
 class Sidebar:
     @classmethod
     def make_sidebar(cls, selected_models: SelectedModels):
-        cls.menu = Sidebar._build_sidebar_menu()
+        obj = cls()
+
+        obj.menu = Sidebar._build_sidebar_menu()
         
         Sidebar._build_model_info(selected_models)
 
-        return cls
+        return obj
+
+    def get_selection(self):
+        return self.menu
 
     @staticmethod
     def _build_model_info(selected_models):
@@ -38,12 +43,16 @@ class Sidebar:
                 "Question answering",
                 "Question generation",
                 "Model evaluation",
-                "Model selection"
+                "Model selection",
+                "Data corpuses"
             ], icons = [
                 'question-circle',
                 'brush',
                 'bar-chart-line',
-                'wrench'
+                'wrench',
+                'folder'
             ], menu_icon='house',
             default_index=0,
             orientation='vertical')
+
+        return menus

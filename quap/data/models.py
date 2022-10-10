@@ -1,44 +1,71 @@
-from typing import Optional
+from __future__ import annotations
+
 from dataclasses import dataclass, field
+from functools import cached_property
+from typing import Optional, Union
 from uuid import UUID, uuid4
-import os
 
-from haystack.document_stores import ElasticsearchDocumentStore
-from haystack import Document
-from sqlalchemy import event
+from quap.utils.index_name import normalize_index_name
 
-from .types import RetrieverType
 
 @dataclass
 class DataCorpus:
     id: UUID = field(default_factory=uuid4, init=False)
     name: str
-    dpr_uuid: Optional[UUID] = field(default_factory=uuid4, init=False)
-    elasticsearch_uuid: Optional[UUID] = field(default_factory=uuid4, init=False)
+    documents: list[Document] = field(default_factory=list, init=False)
 
-@dataclass
-class StoredDocument:
-    id: UUID = field(default_factory=uuid4, init=False)
-    name: str
-    corpus: DataCorpus
-    content_path: str
+    # TODO should we keep it here?
+    # TODO if we move it somewhere else, then models.py will have no relation to any data storage
+    @property
+    def original_documents_index(self) -> str:
+        return normalize_index_name(f'{self.id}-original')
 
-@event.listens_for(StoredDocument, 'after_delete')
-def remove_file_from_storage(mapper, connection, target: StoredDocument):
-    if os.path.exists(target.content_path):
-        os.remove(target.content_path)
-    else:
-        print("Warning! Trying to remove a file that does not exist:", target.content_path)
+    @property
+    def contexts_index(self) -> str:
+        return normalize_index_name(f'{self.id}-contexts')
 
-@dataclass
-class StoredDocumentFragment:
-    id: UUID = field(default_factory=uuid4, init=False)
-    document_offset: int
-    length: int
-    document: StoredDocument
+    # def add_documents(self, documents: Union[Document, list[Document]]):
+    #     if isinstance(documents, Document):
+    #         documents = [documents]
+    #     # TODO define __eq__ for models
+    #     # if any(document.corpus != self for document in documents):
+    #     #     raise ValueError('all Document objects must point to this corpus')
+    #     for document in documents:
+    #         self.documents.append(document)
+
 
 @dataclass
 class Dataset:
     id: UUID = field(default_factory=uuid4, init=False)
     name: str
     corpus: DataCorpus
+
+
+@dataclass
+class Document:
+    id: UUID = field(default_factory=uuid4, init=False)
+    name: str
+    language: str
+    corpus: DataCorpus
+    _text: Optional[str] = field(default=None)
+
+    # TODO this should load document from document store. Do we need this?
+    # TODO maybe the repository should use document store to load the text itself?
+    @cached_property
+    def text(self) -> str:
+        return self._text or ''
+
+
+@dataclass
+class Context:
+    id: UUID = field(default_factory=uuid4, init=False)
+    document: Document
+    offset: int
+    length: int
+
+    def __len__(self) -> int:
+        return self.length
+
+    @property
+    def text(self) -> str:
+        return self.document.text[self.offset:self.offset + self.length]

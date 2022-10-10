@@ -3,8 +3,8 @@ from uuid import uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from quap.data import DataCorpus, Dataset
-from quap.data.repository import DataCorpusRepository, DatasetRepository
+from quap.data import DataCorpus, Dataset, Document
+from quap.data.repository import DataCorpusRepository, DatasetRepository, DocumentRepository
 
 from helpers import generate_random_data_corpora, generate_random_datasets
 
@@ -17,8 +17,8 @@ def test_data_corpus_repository_adding(session: Session):
     repo.add(corpus)
     repo.commit()
 
-    rows = session.execute('SELECT name, dpr_uuid, elasticsearch_uuid FROM data_corpora')
-    assert list(rows) == [('sample_corpus', None, None)]
+    rows = session.execute('SELECT name FROM data_corpora')
+    assert list(rows) == [('sample_corpus',)]
 
 
 @pytest.mark.integration_test
@@ -26,20 +26,16 @@ def test_data_corpus_repository_getting(session: Session):
     repo = DataCorpusRepository(session)
 
     data_corpus_id = uuid4()
-    elasticsearch_uuid = uuid4()
 
-    session.execute('INSERT INTO data_corpora (id, name, dpr_uuid, elasticsearch_uuid) '
-                    'VALUES (:data_corpus_id, \'another_corpus\', null, :elasticsearch_uuid)',
-                    {'data_corpus_id': data_corpus_id, 'elasticsearch_uuid': elasticsearch_uuid})
+    session.execute('INSERT INTO data_corpora (id, name) '
+                    'VALUES (:data_corpus_id, \'another_corpus\')',
+                    {'data_corpus_id': data_corpus_id})
     session.commit()
 
     corpus = repo.get(data_corpus_id)
 
     assert corpus.id == data_corpus_id
     assert corpus.name == 'another_corpus'
-    assert corpus.dpr_uuid is None
-    assert corpus.elasticsearch_uuid == elasticsearch_uuid
-
 
 @pytest.mark.integration_test
 def test_data_corpus_repository_listing(session: Session):
@@ -54,6 +50,41 @@ def test_data_corpus_repository_listing(session: Session):
 
 
 @pytest.mark.integration_test
+def test_data_corpus_repository_documents_modification(session: Session):
+    repo = DataCorpusRepository(session)
+    doc_repo = DocumentRepository(session)
+
+    # initial position
+    corpus = DataCorpus('sample')
+    doc1 = Document('doc1', 'en', corpus, 'document 1 content')
+    doc2 = Document('doc2', 'fr', corpus, 'documento 2 le content :)')
+    doc3 = Document('doc3', 'pl', corpus, 'kontent z dokumentu 3')
+
+    repo.add(corpus)
+    repo.commit()
+
+    # verifying if correctly added
+    corpus = repo.get(corpus.id)
+    assert [doc.name for doc in corpus.documents] == ['doc1', 'doc2', 'doc3']
+    assert [doc.language for doc in corpus.documents] == ['en', 'fr', 'pl']
+
+    # modifying corpus
+    doc2.corpus = None
+    doc_repo.delete(doc2)
+    doc_repo.commit()
+
+    docx2 = Document('doc2', 'uk', corpus, 'український документ номер 2')
+
+    repo.add(corpus)
+    repo.commit()
+
+    # verifying if correctly modified
+    corpus = repo.get(corpus.id)
+    assert [doc.name for doc in corpus.documents] == ['doc1', 'doc3', 'doc2']
+    assert [doc.language for doc in corpus.documents] == ['en', 'pl', 'uk']
+
+
+@pytest.mark.integration_test
 def test_dataset_repository_adding(session: Session):
     repo = DatasetRepository(session)
 
@@ -63,8 +94,8 @@ def test_dataset_repository_adding(session: Session):
     repo.add(dataset)
     repo.commit()
 
-    corpora_rows = session.execute('SELECT name, dpr_uuid, elasticsearch_uuid FROM data_corpora')
-    assert list(corpora_rows) == [('anabilitics', None, None)]
+    corpora_rows = session.execute('SELECT name FROM data_corpora')
+    assert list(corpora_rows) == [('anabilitics',)]
 
     dataset_rows = session.execute('SELECT name, data_corpus_id FROM datasets')
     assert list(dataset_rows) == [('anabilitics', corpus.id)]
@@ -77,8 +108,8 @@ def test_dataset_repository_getting(session: Session):
     data_corpus_id = uuid4()
     dataset_id = uuid4()
 
-    session.execute('INSERT INTO data_corpora (id, name, dpr_uuid, elasticsearch_uuid) '
-                    'VALUES (:data_corpus_id, \'another_corpus\', null, null)',
+    session.execute('INSERT INTO data_corpora (id, name) '
+                    'VALUES (:data_corpus_id, \'another_corpus\')',
                     {'data_corpus_id': data_corpus_id})
 
     session.execute('INSERT INTO datasets (id, name, data_corpus_id) '
@@ -93,8 +124,6 @@ def test_dataset_repository_getting(session: Session):
 
     assert dataset.corpus.id == data_corpus_id
     assert dataset.corpus.name == 'another_corpus'
-    assert dataset.corpus.dpr_uuid is None
-    assert dataset.corpus.elasticsearch_uuid is None
 
 
 @pytest.mark.integration_test

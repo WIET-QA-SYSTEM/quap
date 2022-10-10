@@ -1,9 +1,8 @@
 from uuid import UUID
-from requests import delete
 
 from sqlalchemy.orm import Session
 
-from .models import DataCorpus, Dataset, StoredDocument, StoredDocumentFragment
+from .models import DataCorpus, Dataset, Document, Context
 
 
 class BaseSQLAlchemyRepository:
@@ -27,43 +26,22 @@ class DataCorpusRepository(BaseSQLAlchemyRepository):
     def list(self) -> list[DataCorpus]:
         return self.session.query(DataCorpus).all()
 
-class StoredDocumentRepository(BaseSQLAlchemyRepository):
+
+class DocumentRepository(BaseSQLAlchemyRepository):
     def __init__(self, session: Session) -> None:
         super().__init__(session)
 
-    def add(self, document: StoredDocument) -> None:
+    def add(self, document: Document) -> None:
         self.session.add(document)
 
-    def get(self, id: UUID) -> StoredDocument:
-        return self.session.query(StoredDocument).filter_by(id=id).one()
+    def get(self, id: UUID) -> Document:
+        return self.session.query(Document).filter_by(id=id).one()
 
-    def exists_in_corpus(self, name: str, corpus: DataCorpus) -> bool:
-        return self.session.query(
-            self.session.query(StoredDocument).filter_by(name=name, corpus=corpus).exists()
-        ).scalar()
+    def delete(self, document: Document) -> None:
+        return self.session.delete(document)
 
-    def get_from_corpus(self, name: str, corpus: DataCorpus) -> StoredDocument:
-        return self.session.query(StoredDocument).filter_by(name=name, corpus=corpus).first()
-
-    def remove_from_corpus(self, name: str, corpus: DataCorpus) -> None:
-        self.session.query(StoredDocument).filter_by(name=name, corpus=corpus).delete()
-
-    def list(self) -> list[StoredDocument]:
-        return self.session.query(StoredDocument).all()
-
-
-class StoredDocumentFragmentRepository(BaseSQLAlchemyRepository):
-    def __init__(self, session: Session) -> None:
-        super().__init__(session)
-
-    def add(self, fragment: StoredDocumentFragment) -> None:
-        self.session.add(fragment)
-
-    def get(self, id: UUID) -> StoredDocumentFragment:
-        return self.session.query(StoredDocumentFragment).filter_by(id=id).one()
-
-    def list(self) -> list[StoredDocumentFragment]:
-        return self.session.query(StoredDocumentFragment).all()    
+    def list(self) -> list[Document]:
+        return self.session.query(Document).all()
 
 
 class DatasetRepository(BaseSQLAlchemyRepository):

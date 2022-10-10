@@ -23,7 +23,7 @@ def show_evaluation(eval):
             for metric, value in eval['Retriever'].items():
                 if metric not in eval_names:
                     logging.warning(
-                        "Metric name {} not found in translations and will not be displayed (interface.py)".format(metric_name)
+                        "Metric name {} not found in translations and will not be displayed (interface.py)".format(metric)
                     )
                     continue
                 metric_name = eval_names[metric]

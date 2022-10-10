@@ -7,6 +7,7 @@ from sqlalchemy.orm import clear_mappers, sessionmaker, Session
 from sqlalchemy.engine import Engine
 
 from quap.data.orm import metadata, start_mappers
+from utils.format_unifier import FormatUnifier
 
 
 @pytest.fixture
@@ -36,3 +37,8 @@ def session(engine: Engine) -> Session:
     #     session.execute(f"TRUNCATE {table.name} RESTART IDENTITY CASCADE;")
     #
     # session.commit()
+
+
+@pytest.fixture
+def format_unifier() -> FormatUnifier:
+    return FormatUnifier()

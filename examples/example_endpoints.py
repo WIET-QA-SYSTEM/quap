@@ -1,3 +1,6 @@
+import json
+import logging
+import uuid
 from typing import Union, Any, Optional
 from pathlib import Path
 from uuid import UUID
@@ -10,11 +13,17 @@ from haystack.nodes import FARMReader
 from quap.data import DataCorpus, Document
 
 from quap.data.orm import start_mappers, metadata
-from quap.data.repository import DataCorpusRepository, DocumentRepository
+from quap.data.repository import DataCorpusRepository, DocumentRepository, DatasetRepository
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
 
 from quap.ml.pipelines import QAPipeline
 from quap.ml.nodes import IndexedBM25, IndexedDPR
+
+from quap.utils.dataset_downloader.dataset_downloader import DatasetDownloader
+from quap.utils.persistent_cache import persistent_cache
+
+
+logger = logging.getLogger('quap')
 
 
 # Create a data corpus
@@ -25,6 +34,7 @@ session = sessionmaker(bind=engine, expire_on_commit=False)()
 start_mappers()
 
 corpus_repository = DataCorpusRepository(session)
+dataset_repository = DatasetRepository(session)
 document_repository = DocumentRepository(session)
 
 
@@ -142,3 +152,75 @@ def predict(
 
     print(answers)
     # TODO what type answers are?
+
+
+@persistent_cache('evaluate')
+def evaluate(
+    dataset_id: Optional[UUID] = None,
+    dataset_name: Optional[str] = None,
+    retriever_type: str = 'dpr',
+    dpr_question_encoder: str = 'facebook/dpr-question_encoder-single-nq-base',
+    dpr_context_encoder: str = 'facebook/dpr-ctx_encoder-single-nq-base',
+    reader_encoder: str = 'deepset/roberta-base-squad2',
+):
+
+    # todo check if results are already in the evaluation cache
+
+
+    if dataset_id is not None:
+        dataset = dataset_repository.get(dataset_id)
+    elif dataset_name is not None:
+        dataset_downloader = DatasetDownloader()
+        if dataset_name == DatasetDownloader.NQ_KEY or dataset_name == 'natural_questions':
+            dataset_path = dataset_downloader.get_natural_questions_path()
+        elif dataset_name == DatasetDownloader.SQUAD_KEY:
+            dataset_path = dataset_downloader.get_squad_path()
+        else:
+            logger.warning(f"No such dataset key as '{dataset_name}'")
+            return
+
+        # todo after downloading it write to the document store and database (who should be responsible for that?)
+
+        try:
+            # check if already exists with such name - if not -> add uuid
+            corpus = corpus_repository.get_by_name(dataset_name)
+            if corpus is not None:
+                dataset_name += '_'
+                dataset_name += str(uuid.uuid4())
+            corpus = DataCorpus(dataset_name)
+
+            # add documents to data corpus
+            # assuming each paragraph in squad format is a separate document
+            # doc name: document name + n_paragraph
+            with open(dataset_path, mode='r') as file:
+                dataset_json: dict = json.load(file)
+
+            for i, squad_doc in enumerate(dataset_json['data']):
+                squad_doc_title = squad_doc['title']
+                for j, paragraph in enumerate(squad_doc['paragraphs']):
+                    document_name = squad_doc_title + '_' + f'{j:04}'
+                    document = Document(document_name, 'en', corpus, paragraph['context'])
+                    ELASTICSEARCH_STORAGE.add_document(document)
+
+
+            # TODO remove file from disk in case of eventual endpoint?
+
+            corpus_repository.add(corpus)
+            corpus_repository.commit()
+
+            # todo: add Dataset to repo
+
+        except exc.SQLAlchemyError as ex:
+            session.rollback()
+            raise ex
+    else:
+        raise ValueError("In order to evaluate a dataset pass `dataset_id` or `dataset_name`")
+
+
+
+    retriever, reader = _load_qa_models(retriever_type, dpr_question_encoder, dpr_context_encoder, reader_encoder)
+
+    pipeline = QAPipeline(ELASTICSEARCH_STORAGE, retriever, reader)
+    metrics = pipeline.eval(dataset)
+
+    print(metrics)

@@ -1,3 +1,4 @@
+import contextlib
 import os
 
 import pytest
@@ -13,7 +14,13 @@ from utils.format_unifier import FormatUnifier
 def engine() -> Engine:
     engine = create_engine(os.environ['POSTGRESQL_CONNECTION_STRING'])
     metadata.create_all(engine)
-    return engine
+    yield engine
+
+    with contextlib.closing(engine.connect()) as con:
+        trans = con.begin()
+        for table in reversed(metadata.sorted_tables):
+            con.execute(table.delete())
+        trans.commit()
 
 
 @pytest.fixture
@@ -23,10 +30,13 @@ def session(engine: Engine) -> Session:
     yield session
     clear_mappers()
 
-    for table in reversed(metadata.sorted_tables):
-        session.execute(f"TRUNCATE {table.name} RESTART IDENTITY CASCADE;")
-
-    session.commit()
+    # flushing all uncommitted changes
+    # session.commit()
+    #
+    # for table in reversed(metadata.sorted_tables):
+    #     session.execute(f"TRUNCATE {table.name} RESTART IDENTITY CASCADE;")
+    #
+    # session.commit()
 
 
 @pytest.fixture

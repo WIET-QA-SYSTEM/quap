@@ -1,5 +1,7 @@
-from .fragmented_store import CorpusFragmentedStore
 import os
+
+from quap.document_stores.data_corpus_store import DataCorpusStore
+
 
 elasticsearch_config = {
     'scheme': os.environ['ELASTICSEARCH_SCHEME'],
@@ -7,4 +9,4 @@ elasticsearch_config = {
     'port': os.environ['ELASTICSEARCH_PORT'],
 }
 
-ELASTIC_SEARCH_STORAGE = CorpusFragmentedStore(**elasticsearch_config, index='default')
+ELASTICSEARCH_STORAGE = DataCorpusStore(**elasticsearch_config, index='default')

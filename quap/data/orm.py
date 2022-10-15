@@ -7,8 +7,8 @@ from sqlalchemy.orm import registry, relationship, backref
 from .models import (
     DataCorpus,
     Dataset,
-    StoredDocument,
-    StoredDocumentFragment,
+    Document,
+    Context,
 )
 
 metadata = MetaData()
@@ -18,9 +18,7 @@ data_corpora = Table(
     'data_corpora',
     metadata,
     Column('id', UUID(as_uuid=True), primary_key=True),
-    Column('name', String(50), nullable=False),
-    Column('dpr_uuid', UUID(as_uuid=True), nullable=True),
-    Column('elasticsearch_uuid', UUID(as_uuid=True), nullable=True)
+    Column('name', String(50), nullable=False, unique=True),
 )
 
 documents = Table(
@@ -29,23 +27,13 @@ documents = Table(
     Column('id', UUID(as_uuid=True), primary_key=True),
     Column('name', String(256), nullable=False),
     Column('data_corpus_id', UUID(as_uuid=True), ForeignKey('data_corpora.id', ondelete='CASCADE'), nullable=False),
-    Column('content_path', String(256), nullable=False)
-)
-
-document_fragments = Table(
-    'document_fragments',
-    metadata,
-    Column('id', UUID(as_uuid=True), primary_key=True),
-    Column('document_offset', Integer(), nullable=False),
-    Column('length', Integer(), nullable=False),
-    Column('document_id', UUID(as_uuid=True), ForeignKey('documents.id', ondelete='CASCADE'), nullable=False)
 )
 
 datasets = Table(
     'datasets',
     metadata,
     Column('id', UUID(as_uuid=True), primary_key=True),
-    Column('name', String(50), nullable=False),
+    Column('name', String(50), nullable=False, unique=True),
     Column('data_corpus_id', UUID(as_uuid=True), ForeignKey('data_corpora.id'), nullable=False)
 )
 
@@ -54,6 +42,9 @@ def start_mappers():
     mapper_registry.map_imperatively(
         DataCorpus,
         data_corpora,
+        # properties={
+        #     'documents': relationship(Document, viewonly=True)
+        # }
     )
 
     mapper_registry.map_imperatively(
@@ -64,18 +55,11 @@ def start_mappers():
         }
     )
 
+    # TODO using this for now :) not great actually, cause it won't work without database
     mapper_registry.map_imperatively(
-        StoredDocument,
+        Document,
         documents,
         properties={
-            'corpus': relationship(DataCorpus, backref=backref('documents', passive_deletes=True))
-        }
-    )
-
-    mapper_registry.map_imperatively(
-        StoredDocumentFragment,
-        document_fragments,
-        properties={
-            'document': relationship(StoredDocument, backref=backref('document_fragments', passive_deletes=True))
+            'corpus': relationship(DataCorpus, backref=backref('documents', uselist=True))
         }
     )

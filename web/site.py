@@ -2,22 +2,32 @@ import streamlit as st
 from sidebar import Sidebar
 from evaluation import draw_evaluation
 from model_selection.model_selection import draw_model_selection
-from model_selection.selected_models import SelectedModels
+from model_selection.selected_models import SelectedModels, RetrieverType
+from api import load_qa_models
 from data_corpuses import draw_data_corpuses
 from question_answering import draw_question_answering
 from question_generation import draw_question_generation
 
-selected_models = st.session_state.get('selected_models', SelectedModels( #defaults
-    "facebook/dpr-ctx_encoder-single-nq-base",
-    "facebook/dpr-question_encoder-single-nq-base",
-    "elasticsearch",
-    "distilbert-base-uncased-distilled-squad",
-    "valhalla/t5-base-e2e-qg"
-))
+if 'selected_models' not in st.session_state:
+    st.session_state['selected_models'] = SelectedModels(  # defaults
+        "facebook/dpr-ctx_encoder-single-nq-base",
+        "facebook/dpr-question_encoder-single-nq-base",
+        RetrieverType.DPR,
+        "distilbert-base-uncased-distilled-squad",
+        "valhalla/t5-base-e2e-qg"
+    )
+
+selected_models: SelectedModels = st.session_state['selected_models']
+
+# load_qa_models(retriever_type=selected_models.retriever_type.value(),
+#                dpr_question_encoder=selected_models.dpr_query,
+#                dpr_context_encoder=selected_models.dpr_context,
+#                reader_encoder=selected_models.reader)
+
 
 sidebar = Sidebar.make_sidebar(selected_models)
 
-selection = sidebar.get_selection() 
+selection = sidebar.get_selection()
 
 if selection == "Question answering":
     draw_question_answering()

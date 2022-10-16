@@ -19,7 +19,7 @@ from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
 from quap.ml.pipelines import QAPipeline
 from quap.ml.nodes import IndexedBM25, IndexedDPR
 
-from quap.utils.dataset_downloader.dataset_downloader import DatasetDownloader
+from quap.utils.dataset_downloader import DatasetDownloader
 from quap.utils.persistent_cache import persistent_cache
 
 

@@ -19,9 +19,9 @@ def clean_directory(path: Union[str, Path]) -> None:
     if path.exists() and not path.is_dir():
         raise NotADirectoryError(f'{path} must be a directory')
 
-    path.mkdir(exist_ok=True)
+    os.makedirs(path, exist_ok=True)
     shutil.rmtree(path)
-    path.mkdir(exist_ok=True)
+    os.makedirs(path, exist_ok=True)
 
 
 class DatasetDownloader:
@@ -30,7 +30,7 @@ class DatasetDownloader:
     NQ_KEY = 'nq'
     SQUAD_KEY = 'squad'
 
-    def __init__(self, datasets_dir: str = '.cache/datasets') -> None:
+    def __init__(self, datasets_dir: Union[str, Path] = '.cache/datasets') -> None:
         self.datasets_dir: Path = Path(datasets_dir).resolve()
 
     @persistent_cache('datasets')

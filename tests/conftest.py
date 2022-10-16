@@ -6,6 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import clear_mappers, sessionmaker, Session
 from sqlalchemy.engine import Engine
 
+from helpers import rmtree
+
 from quap.data.orm import metadata, start_mappers
 from quap.utils.preprocessing.format_unifier import FormatUnifier
 
@@ -42,3 +44,9 @@ def session(engine: Engine) -> Session:
 @pytest.fixture
 def format_unifier() -> FormatUnifier:
     return FormatUnifier()
+
+
+@pytest.fixture(scope='session', autouse=True)
+def clear_cache():
+    yield
+    rmtree('.cache')

@@ -1,5 +1,5 @@
 from typing import List
-import uuid, random, string
+import uuid, random, string, shutil, os
 from pathlib import Path
 from quap.data import DataCorpus, Dataset
 
@@ -34,3 +34,8 @@ def generate_random_datasets(count: int) -> List[Dataset]:
         Dataset(generate_random_name(12), generate_random_data_corpora(1)[0])
         for _ in range(count)
     ]
+
+
+def rmtree(path: str):
+    os.makedirs(path, exist_ok=True)
+    shutil.rmtree(path)

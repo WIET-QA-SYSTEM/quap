@@ -3,7 +3,7 @@ from enum import Enum
 
 class RetrieverType(Enum):
     DPR = "dpr"
-    ELASTIC_SEARCH = "elasticsearch"
+    ELASTIC_SEARCH = "bm25"
 
 @dataclass
 class SelectedModels:

@@ -1,5 +1,4 @@
 import requests
-from tika import language
 
 
 class TikaClient:
@@ -16,13 +15,16 @@ class TikaClient:
 
     def _tika(self, binary: bytes) -> str:
         response = requests.put(self._url_join('tika'), headers={
-            'Content-Type': 'application/pdf',
             'Accept': 'text/plain'
         }, data=binary)
+
+        if response.status_code != 200:
+            raise ValueError('unknown format, Tika could not process the file')
+
         return response.content.decode('utf-8')
 
-    def extract(self, pdf: bytes) -> str:
-        return self._tika(pdf)
+    def extract(self, binary: bytes) -> str:
+        return self._tika(binary)
 
     def _language(self, text: str) -> str:
         response = requests.put(self._url_join('language', 'string'), headers={

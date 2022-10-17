@@ -39,17 +39,23 @@ def draw_question_answering():
             logging.info("Predicting on corpus: " +
                          str(corpus_to_id[corpus_selection]))
             with st.spinner(f"Answering: {question_input}"):
-                answers = predict_qa(
-                    corpus_id=corpus_to_id[corpus_selection],
-                    questions=[question_input],
-                    retriever_type=selected_models.retriever_type.value,
-                    dpr_question_encoder=selected_models.dpr_query,
-                    dpr_context_encoder=selected_models.dpr_context,
-                    reader_encoder=selected_models.reader,
-                    use_gpu=True
-                )
+                runtime_error = False
+                try:
+                    answers = predict_qa(
+                        corpus_id=corpus_to_id[corpus_selection],
+                        questions=[question_input],
+                        retriever_type=selected_models.retriever_type.value,
+                        dpr_question_encoder=selected_models.dpr_query,
+                        dpr_context_encoder=selected_models.dpr_context,
+                        reader_encoder=selected_models.reader,
+                        use_gpu=st.session_state['device'] == 'gpu'
+                    )
+                except RuntimeError as ex:
+                    st.error('CUDA out of memory exception. Use a toggle button to use CPU instead of GPU')
+                    runtime_error = True
 
-            st.write("### Model's answer:")
-            for query, answers_list in zip(answers['queries'], answers['answers']):
-                for answer_obj in answers_list[:1]:
-                    st.write(str(answer_obj.answer))
+            if not runtime_error:
+                st.write("### Model's answer:")
+                for query, answers_list in zip(answers['queries'], answers['answers']):
+                    for answer_obj in answers_list[:1]:
+                        st.write(str(answer_obj.answer))

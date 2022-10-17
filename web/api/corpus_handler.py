@@ -43,6 +43,9 @@ def upload(files: list[bytes],
             except ValueError as ex:
                 continue  # TODO show error?
 
+            if not text:
+                continue  # TODO show error?
+
             if filename in name2obj:
                 existing_doc = name2obj[filename]
                 existing_doc.corpus = None

@@ -80,41 +80,48 @@ def draw_question_answering():
             logging.info("Predicting on corpus: " +
                          str(corpus_to_id[corpus_selection]))
             with st.spinner(f"Answering"):
-                answers = predict_qa(
-                    corpus_id=corpus_to_id[corpus_selection],
-                    questions=questions,
-                    retriever_type=selected_models.retriever_type.value,
-                    dpr_question_encoder=selected_models.dpr_query,
-                    dpr_context_encoder=selected_models.dpr_context,
-                    reader_encoder=selected_models.reader,
-                    use_gpu=False
-                )
+                runtime_error = False
+                try:
+                    answers = predict_qa(
+                        corpus_id=corpus_to_id[corpus_selection],
+                        questions=questions,
+                        retriever_type=selected_models.retriever_type.value,
+                        dpr_question_encoder=selected_models.dpr_query,
+                        dpr_context_encoder=selected_models.dpr_context,
+                        reader_encoder=selected_models.reader,
+                        use_gpu=True
+                    )
+                except RuntimeError as ex:
+                    st.error('CUDA out of memory exception. Use a toggle button to use CPU instead of GPU')
+                    runtime_error = True
 
-            st.write("### Answers:")
-            for query, answers_list in zip(answers['queries'], answers['answers']):
+            if not runtime_error:
+                st.write("### Answers:")
+                for query, answers_list in zip(answers['queries'], answers['answers']):
 
-                with st.expander(query):
+                    with st.expander(query):
 
-                    for i, answer_obj in enumerate(answers_list[:3]):
-                        if i > 0:
-                            st.markdown('---')
+                        for i, answer_obj in enumerate(answers_list[:3]):
+                            if i > 0:
+                                st.markdown('---')
 
-                        answer_obj: Answer = answer_obj
+                            answer_obj: Answer = answer_obj
 
-                        answer = answer_obj.answer
-                        context = answer_obj.context
+                            answer = answer_obj.answer
+                            context = answer_obj.context
 
-                        start_idx = answer_obj.offsets_in_context[0].start
-                        end_idx = answer_obj.offsets_in_context[0].end
+                            start_idx = answer_obj.offsets_in_context[0].start
+                            end_idx = answer_obj.offsets_in_context[0].end
 
-                        document_name = answer_obj.meta['document_name']
+                            document_name = answer_obj.meta['document_name']
 
-                        st.write(
-                            markdown(
-                                context[:start_idx] + str(annotation(answer, "ANSWER", "#308896")) + context[end_idx:]),
-                            unsafe_allow_html=True,
-                        )
-                        st.markdown(f"**Relevance:** {answer_obj.score:.4f} -  **Source:** {document_name}")
+                            st.write(
+                                markdown(
+                                    context[:start_idx] + str(annotation(answer, "ANSWER", "#308896")) + context[end_idx:]),
+                                unsafe_allow_html=True,
+                            )
+                            st.markdown(f"**Relevance:** {answer_obj.score:.4f} -  **Source:** {document_name}")
 
-                    if not answers_list:
-                        st.info('Model is not certain what the answer to your question is. Try to reformulate it!')
+                        if not answers_list:
+                            st.info('Model is not certain what the answer to your question is. Try to reformulate it!')
+

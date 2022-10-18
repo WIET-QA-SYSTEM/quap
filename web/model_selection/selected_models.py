@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from enum import Enum
 
+
 class RetrieverType(Enum):
     DPR = "dpr"
     ELASTIC_SEARCH = "bm25"
+
 
 @dataclass
 class SelectedModels:
@@ -12,4 +14,3 @@ class SelectedModels:
     retriever_type: RetrieverType
     reader: str
     question_generator: str
-

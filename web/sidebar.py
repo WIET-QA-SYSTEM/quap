@@ -1,6 +1,8 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 from model_selection.selected_models import RetrieverType, SelectedModels
+from api.pipelines import is_cuda_available
+
 
 class Sidebar:
     @classmethod
@@ -21,20 +23,35 @@ class Sidebar:
         # todo can try https://github.com/0phoff/st-btn-select for cpu/gpu switching
         with st.sidebar:
             st.markdown("***")
-            st.markdown("### Selected models")
+
+            col1, col2 = st.columns([5, 2])
+
+            with col1:
+                st.markdown("## Selected models")
+            with col2:
+                cuda_available = is_cuda_available()
+                default_device = 'gpu' if cuda_available else 'cpu'
+                device = st.select_slider('Device',
+                                          options=['cpu', 'gpu'],
+                                          value=default_device,
+                                          disabled=not cuda_available,
+                                          label_visibility='collapsed')
+
+                st.session_state['device'] = device
+
             st.write("#### DPR context embedding")
-            st.write(selected_models.dpr_context)
+            st.code(selected_models.dpr_context)
             st.write("#### DPR query embedding")
-            st.write(selected_models.dpr_query)
+            st.code(selected_models.dpr_query)
             st.write("#### Retriever type")
             if selected_models.retriever_type == RetrieverType.DPR:
-                st.write("Dense passage retrieval")
+                st.code("Dense Passage Retrieval")
             else:
-                st.write("Elastic search")
+                st.code("Elasticsearch")
             st.write("#### Reader model")
-            st.write(selected_models.reader)
+            st.code(selected_models.reader)
             st.write("#### Question generation model")           
-            st.write(selected_models.question_generator)
+            st.code(selected_models.question_generator)
 
 
     @staticmethod

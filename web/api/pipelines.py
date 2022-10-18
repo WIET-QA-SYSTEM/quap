@@ -1,16 +1,10 @@
-from pathlib import Path
 from typing import Any, Optional, Union
 from uuid import UUID
 
-from haystack.nodes import FARMReader
-from quap.data import DataCorpus, Document
-from quap.data.orm import metadata, start_mappers
-from quap.data.repository import DataCorpusRepository, DocumentRepository
+import torch
+
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
-from quap.ml.nodes import IndexedBM25, IndexedDPR
 from quap.ml.pipelines import QAPipeline
-from sqlalchemy import create_engine, exc
-from sqlalchemy.orm import sessionmaker
 
 from .db_access import corpus_repository
 from .loader import load_qa_models
@@ -37,3 +31,7 @@ def predict_qa(
 
     return answers
     # TODO what type answers are?
+
+
+def is_cuda_available() -> bool:
+    return torch.cuda.is_available()

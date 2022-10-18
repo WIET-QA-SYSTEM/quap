@@ -1,12 +1,13 @@
 import streamlit as st
+
 from sidebar import Sidebar
 from evaluation import draw_evaluation
 from model_selection.model_selection import draw_model_selection
 from model_selection.selected_models import SelectedModels, RetrieverType
-from api import load_qa_models
 from data_corpuses import draw_data_corpuses
 from question_answering import draw_question_answering
 from question_generation import draw_question_generation
+
 
 if 'selected_models' not in st.session_state:
     st.session_state['selected_models'] = SelectedModels(  # defaults

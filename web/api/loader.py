@@ -85,12 +85,6 @@ def load_qa_models(
 
 
 def get_model_languages() -> dict[str, dict[str, str]]:
-    """todo
-    A better approach would be warning at the step of selecting the models (thus needs to be downloaded in model listings).
-    For the comparison with the corpus requires to load models first or show warning only after the prediction, or
-    use this warning inside the endpoint, which is not really beautiful.
-    """
-
     reg = main_state_registry
     return {
         'retriever': {

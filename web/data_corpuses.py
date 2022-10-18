@@ -65,8 +65,10 @@ def draw_data_corpuses():
             st.write("Upload new files to the data corpus")
 
             with st.form("upload_corpus_files"):
-                uploader = st.file_uploader("Select files to upload", [
-                                            'pdf', 'txt', 'pptx'], accept_multiple_files=True)
+                uploader = st.file_uploader(
+                    "Select files to upload",
+                    accept_multiple_files=True
+                )
 
                 upload_btn = st.form_submit_button("Upload")
 

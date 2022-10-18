@@ -1,20 +1,48 @@
-from utils.format_unifier import FormatUnifier
-from utils.tika_client import TikaClient
-from helpers import TEST_DATA_PATH
+from pathlib import Path
+
 import pytest
+from helpers import TEST_DATA_PATH
 
-
-def test_extract_from_pptx(format_unifier: FormatUnifier):
-    t = format_unifier.extract_text(TEST_DATA_PATH / "samplepptx.pptx")
-    assert "Sample PowerPoint" in t, \
-        "PowerPoint keyword should be in extracted string"
+from quap.utils.preprocessing.format_unifier import FormatUnifier
 
 
 @pytest.mark.integration_test
-def test_extract_from_pdf(format_unifier: FormatUnifier):
-    t = format_unifier.extract_text(TEST_DATA_PATH / "sample.pdf")
-    assert "small demonstration" in t, \
-        "small demonstration keyword should be in extracted string"
+@pytest.mark.parametrize(
+    'filepath, segment',
+    [
+        (TEST_DATA_PATH / "samplepptx.pptx", "Sample PowerPoint"),
+        (TEST_DATA_PATH / "sample.pdf", "small demonstration")
+    ]
+)
+def test_extract_filepath(format_unifier: FormatUnifier, filepath: Path, segment: str):
+    t = format_unifier.extract_text(filepath)
+    assert segment in t
+
+
+@pytest.mark.integration_test
+@pytest.mark.parametrize(
+    'filepath, segment',
+    [
+        (TEST_DATA_PATH / "samplepptx.pptx", "Sample PowerPoint"),
+        (TEST_DATA_PATH / "sample.pdf", "small demonstration")
+    ]
+)
+def test_extract_bytes_from_file(format_unifier: FormatUnifier, filepath: Path, segment: str):
+    t = format_unifier.extract_text(filepath.read_bytes())
+    assert segment in t
+
+
+@pytest.mark.integration_test
+@pytest.mark.parametrize(
+    'binary, segment',
+    [
+        ('This chunk of text is really interesting'.encode('utf-8'), 'This chunk of text is really interesting'),
+        ('This chunk of text is really interesting'.encode('ascii'), 'This chunk of text is really interesting')
+    ]
+)
+def test_extract_bytes_from_file(format_unifier: FormatUnifier, binary: bytes, segment: str):
+    t = format_unifier.extract_text(binary)
+    assert segment in t
 
 
 @pytest.mark.integration_test

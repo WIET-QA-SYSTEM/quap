@@ -7,7 +7,7 @@ from sqlalchemy.orm import clear_mappers, sessionmaker, Session
 from sqlalchemy.engine import Engine
 
 from quap.data.orm import metadata, start_mappers
-from utils.format_unifier import FormatUnifier
+from quap.utils.preprocessing.format_unifier import FormatUnifier
 
 
 @pytest.fixture

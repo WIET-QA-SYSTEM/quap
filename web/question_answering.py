@@ -124,3 +124,4 @@ def draw_question_answering():
 
                         if not answers_list:
                             st.info('Model is not certain what the answer to your question is. Try to reformulate it!')
+

@@ -2,7 +2,6 @@ from typing import Any, Optional, Union
 from uuid import UUID
 
 import torch
-
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
 from quap.ml.pipelines import QAPipeline
 from quap.ml.pipelines.qg_pipeline import QGPipeline
@@ -17,7 +16,8 @@ def predict_qg(
     generator: str = 'valhalla/t5-base-e2e-qg',
     use_gpu: bool = False,
     params: dict = None,
-    pairs_per_document = 5
+    pairs_per_document=5,
+    answers_per_pair=3
 ):
 
     corpus = corpus_repository.get(corpus_id)
@@ -25,9 +25,9 @@ def predict_qg(
                                            load_generator=True, load_retriever=False)
 
     pipeline = QGPipeline(ELASTICSEARCH_STORAGE, generator, reader)
-    answers = pipeline(corpus, pairs_per_document)
+    answers = pipeline(corpus, pairs_per_document, answers_per_pair)
 
-    # return answers
+    return answers
 
 
 def predict_qa(

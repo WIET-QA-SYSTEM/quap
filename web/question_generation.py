@@ -2,6 +2,10 @@ import streamlit as st
 import logging
 
 from api import get_data_corpora, predict_qg
+from markdown import markdown
+from haystack import Answer
+from annotated_text import annotation
+from quap.ml.pipelines.qg_pipeline import QGResult
 from web.model_selection.selected_models import SelectedModels
 
 
@@ -41,6 +45,8 @@ def draw_question_generation():
             selected_models: SelectedModels = st.session_state['selected_models']
             logging.info("Generating on corpus: " +
                          str(corpus_to_id[corpus_selection]))
+            logging.info(f"{n_questions} questions for each document")
+            print(selected_models)
 
             with st.spinner(f"Generating questions & answers"):
                 runtime_error = False
@@ -59,7 +65,6 @@ def draw_question_generation():
             if not runtime_error:
                 st.write("### Generated questons and answers")                
 
-                generator_container = st.container()
                 st.markdown(    
                     """
                     <style>
@@ -72,15 +77,33 @@ def draw_question_generation():
                 )
 
                 col1, col2 = st.columns(2)
+
                 with col1:
-                    st.write("#### Question")
+                    st.write("### Questions")
+
                 with col2:
-                    st.write("#### Answer")
+                    st.write("### Answers")
 
-                for _ in range(10):
-                    col1, col2 = st.columns(2)
+                for file_name, qg_results in questions_and_answers.items():
+                    with st.expander(file_name):
+                        for result in qg_results:
+                            result: QGResult
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.write(result.question)
 
-                    with col1:
-                        st.write(f"Question {_}")
-                    with col2:
-                        st.write(f"Answer {_}")
+                            with col2:
+                                for answer_obj in result.answers:
+                                    answer_obj: Answer
+                                    answer = answer_obj.answer
+                                    context = answer_obj.context
+
+                                    start_idx = answer_obj.offsets_in_context[0].start
+                                    end_idx = answer_obj.offsets_in_context[0].end
+
+                                    st.write(
+                                        markdown(
+                                            context[:start_idx] + str(annotation(answer, "ANSWER", "#308896")) + context[end_idx:]),
+                                        unsafe_allow_html=True,
+                                    )
+                                    st.markdown(f"**Relevance:** {answer_obj.score:.4f}")

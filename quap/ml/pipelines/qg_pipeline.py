@@ -1,16 +1,18 @@
+from dataclasses import dataclass
+from typing import List
+
+from haystack import Answer
 from haystack.nodes import FARMReader, QuestionGenerator
 from haystack.pipelines import QuestionAnswerGenerationPipeline
-
 from quap.data.models import DataCorpus
 from quap.document_stores import DataCorpusStore
-from typing import List
-from haystack import Answer
-from dataclasses import dataclass
+
 
 @dataclass
 class QGResult:
     question: str
     answers: List[Answer]
+
 
 class QGPipeline:
     def __init__(self, storage: DataCorpusStore,
@@ -23,18 +25,29 @@ class QGPipeline:
         pipeline = QuestionAnswerGenerationPipeline(
             self.generator, self.reader)
 
-        results = {}
+        results_for_document = {}
 
-        for idx, document in enumerate(self.storage.get_all_documents(index=corpus.contexts_index)):
+        for document in self.storage.get_all_documents(index=corpus.contexts_index):
             doc_result = pipeline.run(documents=[document])
 
+            if document.meta['document_name'] not in results_for_document:
+                results_for_document[document.meta['document_name']] = []
 
-            results[document.meta['document_name']] = []
+            for query, answers in zip(doc_result['queries'], doc_result['answers']):
 
+                results_for_document[document.meta['document_name']].append(
+                    (query, answers, max(answer.score for answer in answers))
+                )
 
-            for query, answers in zip(doc_result['queries'], doc_result['answers'])[:pairs_per_document]:
-                partial_result = QGResult(query, answers[:answers_per_pair])
-            
-                results[document.meta['document_name']].append(partial_result)
+        for document, results in results_for_document.items():
+            # sort by max achievable score
+            results.sort(key=lambda query_tuple: query_tuple[2], reverse=True)
+            results = results[:pairs_per_document]
+            # Trim answers to the requested amount
+            results = [QGResult(
+                query_tuple[0], query_tuple[1][:answers_per_pair]
+            ) for query_tuple in results]
 
-        return results
+            results_for_document[document] = results
+
+        return results_for_document

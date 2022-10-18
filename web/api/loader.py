@@ -1,28 +1,32 @@
 from calendar import c
-from typing import Union, Optional
 from dataclasses import dataclass
+from typing import Optional, Union
 
 import streamlit as st
 from haystack.nodes import FARMReader, QuestionGenerator
-
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
 from quap.ml.nodes import IndexedBM25, IndexedDPR
 
 
 @dataclass
 class StateRegistry:
-    bm25_retriever: Optional[IndexedBM25] = st.session_state.get('global_bm25_retriever', None)
-    dpr_retriever: Optional[IndexedDPR] = st.session_state.get('global_dpr_retriever', None)
-    farm_reader: Optional[FARMReader] = st.session_state.get('global_farm_reader', None)
-    generator: Optional[QuestionGenerator] = st.session_state.get('global_question_generator', None)
+    bm25_retriever: Optional[IndexedBM25] = st.session_state.get(
+        'global_bm25_retriever', None)
+    dpr_retriever: Optional[IndexedDPR] = st.session_state.get(
+        'global_dpr_retriever', None)
+    farm_reader: Optional[FARMReader] = st.session_state.get(
+        'global_farm_reader', None)
+    generator: Optional[QuestionGenerator] = st.session_state.get(
+        'global_question_generator', None)
     use_gpu: str = st.session_state.get('device', 'cpu') == 'gpu'
 
-    def save(self):
+    def save(self): 
         st.session_state['global_bm25_retriever'] = self.bm25_retriever
         st.session_state['global_dpr_retriever'] = self.dpr_retriever
         st.session_state['global_farm_reader'] = self.farm_reader
         st.session_state['global_question_generator'] = self.generator
         st.session_state['device'] = 'gpu' if self.use_gpu else 'cpu'
+
 
 main_state_registry = StateRegistry()
 
@@ -50,7 +54,8 @@ def load_nlp_models(
 
     # setting up the retriever
     if retriever_type == 'bm25':
-        main_state_registry.bm25_retriever = main_state_registry.bm25_retriever or IndexedBM25(ELASTICSEARCH_STORAGE)
+        main_state_registry.bm25_retriever = main_state_registry.bm25_retriever or IndexedBM25(
+            ELASTICSEARCH_STORAGE)
         retriever = main_state_registry.bm25_retriever
     elif retriever_type == 'dpr':
         if load_retriever:
@@ -83,7 +88,8 @@ def load_nlp_models(
             or current_reader_name != reader_encoder \
             or main_state_registry.use_gpu != use_gpu:
 
-        main_state_registry.farm_reader = FARMReader(reader_encoder, use_gpu=use_gpu)
+        main_state_registry.farm_reader = FARMReader(
+            reader_encoder, use_gpu=use_gpu)
 
     if load_generator:
 
@@ -91,13 +97,16 @@ def load_nlp_models(
             current_generator_name = main_state_registry.generator.model.name_or_path
         except Exception as ex:
             current_generator_name = None
-        
-        if main_state_registry.generator is None \
+
+        # FIXME: Right now we always reload due to what
+        # is likely a haystack bug
+        if True or main_state_registry.generator is None \
                 or current_generator_name != generator \
                 or main_state_registry.use_gpu != use_gpu:
 
-            main_state_registry.generator = QuestionGenerator(generator)
-            
+            main_state_registry.generator = QuestionGenerator(
+                generator, use_gpu=use_gpu)
+
     main_state_registry.use_gpu = use_gpu
     main_state_registry.save()
 

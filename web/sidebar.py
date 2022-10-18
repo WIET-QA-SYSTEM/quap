@@ -20,6 +20,7 @@ class Sidebar:
 
     @staticmethod
     def _build_model_info(selected_models):
+        # todo can try https://github.com/0phoff/st-btn-select for cpu/gpu switching
         with st.sidebar:
             st.markdown("***")
 

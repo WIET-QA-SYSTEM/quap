@@ -16,6 +16,7 @@ def get_data_corpora() -> list[dict[str, Any]]:
         corpora.append({
             'id': corpus.id,
             'name': corpus.name,
+            'language': corpus.language,
             'document_names': [doc.name for doc in corpus.documents]
         })
     return corpora
@@ -63,6 +64,7 @@ def upload(files: list[bytes],
                 document_repository.delete(existing_doc)
 
             doc = Document(filename, format_unifier.detect_language(text), corpus, text)
+            print(doc.language)
             ELASTICSEARCH_STORAGE.add_document(doc)
 
             # TODO remove file from disk in case of eventual endpoint?

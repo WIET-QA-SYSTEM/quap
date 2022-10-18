@@ -71,3 +71,22 @@ def load_qa_models(
     main_state_registry.save()
 
     return retriever, main_state_registry.farm_reader
+
+
+def get_model_languages() -> dict[str, dict[str, str]]:
+    """todo
+    A better approach would be warning at the step of selecting the models (thus needs to be downloaded in model listings).
+    For the comparison with the corpus requires to load models first or show warning only after the prediction, or
+    use this warning inside the endpoint, which is not really beautiful.
+    """
+
+    reg = main_state_registry
+    return {
+        'retriever': {
+            'query': reg.dpr_retriever.query_encoder.language if reg.dpr_retriever is not None else None,
+            'context': reg.dpr_retriever.passage_encoder.language if reg.dpr_retriever is not None else None,
+        },
+        'reader': {
+            'encoder': reg.farm_reader.inferencer.model.language_model.language if reg.farm_reader is not None else None
+        }
+    }

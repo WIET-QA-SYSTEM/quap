@@ -1,5 +1,9 @@
-import streamlit as st
 import logging
+
+import streamlit as st
+
+from api import get_datasets
+
 
 def show_evaluation(eval):
 
@@ -33,12 +37,20 @@ def show_evaluation(eval):
                 st.markdown("###### {} - {}".format(metric_name, metric_value))
                 st.progress(value)
 
+
 def draw_evaluation():
 
     st.write("## Model evaluation")
 
+    datasets = get_datasets()
+
+    name_to_id = {
+        dataset['name']: dataset['id']
+        for dataset in datasets
+    }
+
     with st.form("evaluation-form"):    
-        st.selectbox("Select dataset for evaluation", ["Dataset 1", "Dataset 2"])
+        st.selectbox("Select dataset for evaluation", name_to_id.keys())
 
         submitted = st.form_submit_button("Evaluate")
 

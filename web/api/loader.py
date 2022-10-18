@@ -1,11 +1,15 @@
 from typing import Union, Optional
 from dataclasses import dataclass
+import logging
 
 import streamlit as st
 from haystack.nodes import FARMReader
 
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
 from quap.ml.nodes import IndexedBM25, IndexedDPR
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -43,6 +47,10 @@ def load_qa_models(
                 or main_state_registry.dpr_retriever.query_encoder.model.name_or_path != dpr_question_encoder \
                 or main_state_registry.use_gpu != use_gpu:
 
+            logger.info(f'Loading DPR model: using GPU - {use_gpu}')
+            logger.info(f'  context encoder - {dpr_context_encoder}')
+            logger.info(f'  question encoder - {dpr_question_encoder}')
+
             main_state_registry.dpr_retriever = IndexedDPR(
                 document_store=ELASTICSEARCH_STORAGE,
                 query_embedding_model=dpr_question_encoder,
@@ -64,6 +72,9 @@ def load_qa_models(
     if main_state_registry.farm_reader is None \
             or current_reader_name != reader_encoder \
             or main_state_registry.use_gpu != use_gpu:
+
+        logger.info(f'Loading reader model: using GPU - {use_gpu}')
+        logger.info(f'  reader encoder - {reader_encoder}')
 
         main_state_registry.farm_reader = FARMReader(reader_encoder, use_gpu=use_gpu)
 

@@ -1,11 +1,15 @@
 from calendar import c
 from dataclasses import dataclass
 from typing import Optional, Union
+import logging
 
 import streamlit as st
 from haystack.nodes import FARMReader, QuestionGenerator
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
 from quap.ml.nodes import IndexedBM25, IndexedDPR
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -87,6 +91,9 @@ def load_nlp_models(
     if main_state_registry.farm_reader is None \
             or current_reader_name != reader_encoder \
             or main_state_registry.use_gpu != use_gpu:
+
+        logger.info(f'Loading reader model: using GPU - {use_gpu}')
+        logger.info(f'  reader encoder - {reader_encoder}')
 
         main_state_registry.farm_reader = FARMReader(
             reader_encoder, use_gpu=use_gpu)

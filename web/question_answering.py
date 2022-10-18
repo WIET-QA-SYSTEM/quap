@@ -10,6 +10,9 @@ from api import get_data_corpora, predict_qa
 from model_selection.selected_models import SelectedModels
 
 
+logger = logging.getLogger(__name__)
+
+
 def draw_question_answering():
     st.markdown("## Question answering")
 
@@ -92,7 +95,9 @@ def draw_question_answering():
                         use_gpu=st.session_state.get('device', 'cpu') == 'gpu'
                     )
                 except RuntimeError as ex:
-                    st.error('CUDA out of memory exception. Use a toggle button to use CPU instead of GPU')
+                    logger.error(str(ex))
+                    st.error(str(ex))
+                    st.info('If there are problems with CUDA - you can try to use CPU instead of GPU (toggle button)')
                     runtime_error = True
 
             if not runtime_error:

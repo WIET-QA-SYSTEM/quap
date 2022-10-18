@@ -7,7 +7,7 @@ from quap.data import DataCorpus, Document
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
 from quap.utils.preprocessing import FormatUnifier
 
-from .db_access import document_repository, corpus_repository, session
+from .db_access import document_repository, corpus_repository, dataset_repository, session
 
 
 def get_data_corpora() -> list[dict[str, Any]]:
@@ -19,6 +19,17 @@ def get_data_corpora() -> list[dict[str, Any]]:
             'document_names': [doc.name for doc in corpus.documents]
         })
     return corpora
+
+
+def get_datasets() -> list[dict[str, Any]]:
+    datasets = []
+    for dataset in dataset_repository.list():
+        datasets.append({
+            'id': dataset.id,
+            'name': dataset.name,
+            'corpus_id': dataset.corpus.id
+        })
+    return datasets
 
 
 def upload(files: list[bytes],

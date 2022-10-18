@@ -90,7 +90,7 @@ def draw_data_corpuses():
 
     with st.expander("Remove a data corpus"):
         corpus_selection = st.selectbox(
-            "Select a data corpus for removal", data_corpuses)
+            "Select a data corpus for removal", name_to_id.keys())
 
         if corpus_selection != None:
             remove_btn = st.button("Remove")

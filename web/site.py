@@ -20,12 +20,6 @@ if 'selected_models' not in st.session_state:
 
 selected_models: SelectedModels = st.session_state['selected_models']
 
-# load_qa_models(retriever_type=selected_models.retriever_type.value(),
-#                dpr_question_encoder=selected_models.dpr_query,
-#                dpr_context_encoder=selected_models.dpr_context,
-#                reader_encoder=selected_models.reader)
-
-
 sidebar = Sidebar.make_sidebar(selected_models)
 
 selection = sidebar.get_selection()

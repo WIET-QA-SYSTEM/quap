@@ -6,8 +6,8 @@ from haystack import Answer
 from annotated_text import annotation
 from markdown import markdown
 
-from api import get_data_corpora, load_qa_models, predict_qa
-from model_selection.selected_models import RetrieverType, SelectedModels
+from api import get_data_corpora, predict_qa
+from model_selection.selected_models import SelectedModels
 
 
 def draw_question_answering():
@@ -89,7 +89,7 @@ def draw_question_answering():
                         dpr_question_encoder=selected_models.dpr_query,
                         dpr_context_encoder=selected_models.dpr_context,
                         reader_encoder=selected_models.reader,
-                        use_gpu=True
+                        use_gpu=st.session_state.get('device', 'cpu') == 'gpu'
                     )
                 except RuntimeError as ex:
                     st.error('CUDA out of memory exception. Use a toggle button to use CPU instead of GPU')

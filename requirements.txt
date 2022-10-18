@@ -3,7 +3,6 @@ SQLAlchemy==1.4.36
 farm-haystack==1.9.0
 python-dotenv==0.21.0
 psycopg2==2.9.3
-torch==1.12
 more-itertools==8.13.0
 spacy==3.4.1
 
@@ -16,3 +15,6 @@ tika~=1.24
 python-pptx~=0.6.10
 
 st-annotated-text==3.0.0
+
+torch==1.12 # keep torch at the bottom of the list to allow canceling in case of 
+# cuda mismatch

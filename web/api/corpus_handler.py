@@ -1,12 +1,11 @@
-from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 from uuid import UUID
 
-from numpy import byte
+from sqlalchemy import exc
 
 from quap.data import DataCorpus, Document
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
-from sqlalchemy import exc
+from quap.utils.preprocessing import FormatUnifier
 
 from .db_access import document_repository, corpus_repository, dataset_repository, session
 
@@ -44,22 +43,26 @@ def upload(files: list[bytes],
         elif data_corpus_name is not None:
             corpus = DataCorpus(data_corpus_name)
         else:
-            raise ValueError(
-                'either `data_corpus_id` or `data_corpus_name` must be passed')
+            raise ValueError('either `data_corpus_id` or `data_corpus_name` must be passed')
 
-        name2obj: dict[str, Document] = {
-            document.name: document for document in corpus.documents}
+        name2obj: dict[str, Document] = {document.name: document for document in corpus.documents}
+        format_unifier = FormatUnifier()
 
         for file_content, filename in zip(files, filenames):
-            # TODO check the type of file and extract text (assuming only txts for now)
-            text = file_content.decode('utf-8')
+            try:
+                text = format_unifier.extract_text(file_content)
+            except ValueError as ex:
+                continue  # TODO show error?
+
+            if not text:
+                continue  # TODO show error?
 
             if filename in name2obj:
                 existing_doc = name2obj[filename]
                 existing_doc.corpus = None
                 document_repository.delete(existing_doc)
 
-            doc = Document(filename, 'en', corpus, text)  # TODO language detection
+            doc = Document(filename, format_unifier.detect_language(text), corpus, text)
             ELASTICSEARCH_STORAGE.add_document(doc)
 
             # TODO remove file from disk in case of eventual endpoint?

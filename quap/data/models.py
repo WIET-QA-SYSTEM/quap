@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from collections import Counter
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Optional, Union
@@ -13,6 +13,11 @@ class DataCorpus:
     id: UUID = field(default_factory=uuid4, init=False)
     name: str
     documents: list[Document] = field(default_factory=list, init=False)
+
+    @property
+    def language(self) -> str:
+        counter = Counter([doc.language for doc in self.documents])
+        return counter.most_common(1)[0][0]
 
     # TODO should we keep it here?
     # TODO if we move it somewhere else, then models.py will have no relation to any data storage

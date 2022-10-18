@@ -87,7 +87,7 @@ def draw_question_answering():
                     dpr_question_encoder=selected_models.dpr_query,
                     dpr_context_encoder=selected_models.dpr_context,
                     reader_encoder=selected_models.reader,
-                    use_gpu=True
+                    use_gpu=False
                 )
 
             st.write("### Answers:")

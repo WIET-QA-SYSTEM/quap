@@ -91,11 +91,10 @@ def draw_question_answering():
                         dpr_question_encoder=selected_models.dpr_query,
                         dpr_context_encoder=selected_models.dpr_context,
                         reader_encoder=selected_models.reader,
-                        use_gpu=True
+                        use_gpu=st.session_state['device'] == 'gpu'
                     )
 
                     corpus_language = languages.get(alpha2=corpus_to_id[corpus_selection]['language']).name.lower()
-                    print(corpus_language)
                     model_languages = get_model_languages()
                     if selected_models.retriever_type.value == 'dpr':
                         query_encoder_language = model_languages['retriever']['query']

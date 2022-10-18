@@ -91,7 +91,7 @@ def draw_question_answering():
                         reader_encoder=selected_models.reader,
                         use_gpu=True
                     )
-                 except RuntimeError as ex:
+                except RuntimeError as ex:
                     st.error('CUDA out of memory exception. Use a toggle button to use CPU instead of GPU')
                     runtime_error = True
 

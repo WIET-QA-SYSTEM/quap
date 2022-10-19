@@ -17,6 +17,8 @@ class DataCorpus:
     @property
     def language(self) -> str:
         counter = Counter([doc.language for doc in self.documents])
+        if len(self.documents) == 0:
+            return 'en'
         return counter.most_common(1)[0][0] if counter else 'en'
 
     # TODO should we keep it here?

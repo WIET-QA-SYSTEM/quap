@@ -27,10 +27,8 @@ class QGPipeline:
 
         results_for_document = {}
 
-        try:
-            self.storage.get_all_documents(index=corpus.contexts_index)
-        except:
-            # Storage is empty or inaccessible 
+        if not self.storage.index_exists(index_name=corpus.contexts_index):
+            # Storage is empty
             return {}
 
         for document in self.storage.get_all_documents(index=corpus.contexts_index):

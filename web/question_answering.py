@@ -1,15 +1,15 @@
-from uuid import uuid4
 import logging
+from uuid import uuid4
 
 import streamlit as st
-from haystack import Answer
 from annotated_text import annotation
-from markdown import markdown
+from haystack import Answer
 from iso639 import languages
+from markdown import markdown
 
-from api import get_data_corpora, predict_qa, get_model_languages
-from model_selection.selected_models import RetrieverType, SelectedModels
-
+from api import (get_data_corpora, get_model_languages, load_nlp_models,
+                 predict_qa)
+from model_selection.selected_models import SelectedModels
 
 logger = logging.getLogger(__name__)
 

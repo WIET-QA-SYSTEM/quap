@@ -2,12 +2,32 @@ from typing import Any, Optional, Union
 from uuid import UUID
 
 import torch
-
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
 from quap.ml.pipelines import QAPipeline
+from quap.ml.pipelines.qg_pipeline import QGPipeline
 
 from .db_access import corpus_repository
-from .loader import load_qa_models
+from .loader import load_nlp_models
+
+
+def predict_qg(
+    corpus_id=UUID,
+    reader_encoder: str = 'deepset/roberta-base-squad2',
+    generator: str = 'valhalla/t5-base-e2e-qg',
+    use_gpu: bool = False,
+    params: dict = None,
+    pairs_per_document=5,
+    answers_per_pair=3
+):
+
+    corpus = corpus_repository.get(corpus_id)
+    _, reader, generator = load_nlp_models(generator=generator, reader_encoder=reader_encoder, use_gpu=use_gpu,
+                                           load_generator=True, load_retriever=False)
+
+    pipeline = QGPipeline(ELASTICSEARCH_STORAGE, generator, reader)
+    answers = pipeline(corpus, pairs_per_document, answers_per_pair)
+
+    return answers
 
 
 def predict_qa(
@@ -22,7 +42,8 @@ def predict_qa(
 ) -> list[dict[str, Any]]:
 
     corpus = corpus_repository.get(corpus_id)
-    retriever, reader = load_qa_models(retriever_type, dpr_question_encoder, dpr_context_encoder, reader_encoder, use_gpu)
+    retriever, reader, _ = load_nlp_models(retriever_type, dpr_question_encoder, dpr_context_encoder,
+                                           reader_encoder, use_gpu, load_generator=False, load_retriever=True)
 
     # TODO how do we interrupt this? or interrupt evaluation?
     # TODO should this be another global thread? process? so we can send some signal to it?

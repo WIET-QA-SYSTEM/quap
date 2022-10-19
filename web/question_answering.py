@@ -1,15 +1,15 @@
-from uuid import uuid4
 import logging
+from uuid import uuid4
 
 import streamlit as st
-from haystack import Answer
 from annotated_text import annotation
-from markdown import markdown
+from haystack import Answer
 from iso639 import languages
+from markdown import markdown
 
-from api import get_data_corpora, load_qa_models, predict_qa, get_model_languages
-from model_selection.selected_models import RetrieverType, SelectedModels
-
+from api import (get_data_corpora, get_model_languages, load_nlp_models,
+                 predict_qa)
+from model_selection.selected_models import SelectedModels
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ def draw_question_answering():
             with st.spinner(f"Answering"):
                 runtime_error = False
                 try:
-                    load_qa_models(
+                    load_nlp_models(
                         retriever_type=selected_models.retriever_type.value,
                         dpr_question_encoder=selected_models.dpr_query,
                         dpr_context_encoder=selected_models.dpr_context,
@@ -118,7 +118,7 @@ def draw_question_answering():
                         dpr_question_encoder=selected_models.dpr_query,
                         dpr_context_encoder=selected_models.dpr_context,
                         reader_encoder=selected_models.reader,
-                        use_gpu=st.session_state['device'] == 'gpu'
+                        use_gpu=st.session_state.get('device', 'cpu') == 'gpu'
                     )
                 except RuntimeError as ex:
                     logger.error(str(ex))

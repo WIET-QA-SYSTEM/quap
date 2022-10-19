@@ -17,7 +17,7 @@ class DataCorpus:
     @property
     def language(self) -> str:
         counter = Counter([doc.language for doc in self.documents])
-        return counter.most_common(1)[0][0]
+        return counter.most_common(1)[0][0] if counter else 'en'
 
     # TODO should we keep it here?
     # TODO if we move it somewhere else, then models.py will have no relation to any data storage

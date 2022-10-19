@@ -5,8 +5,9 @@ import streamlit as st
 from haystack import Answer
 from annotated_text import annotation
 from markdown import markdown
+from iso639 import languages
 
-from api import get_data_corpora, load_qa_models, predict_qa
+from api import get_data_corpora, load_qa_models, predict_qa, get_model_languages
 from model_selection.selected_models import RetrieverType, SelectedModels
 
 
@@ -20,7 +21,7 @@ def draw_question_answering():
 
     corpuses = [corpus['name'] for corpus in corpus_objects]
     corpus_to_id = {
-        corpus['name']: corpus['id']
+        corpus['name']: corpus
         for corpus in corpus_objects
     }
 
@@ -81,12 +82,37 @@ def draw_question_answering():
         if question_submit:
             selected_models: SelectedModels = st.session_state['selected_models']
             logging.info("Predicting on corpus: " +
-                         str(corpus_to_id[corpus_selection]))
+                         str(corpus_to_id[corpus_selection]['id']))
             with st.spinner(f"Answering"):
                 runtime_error = False
                 try:
+                    load_qa_models(
+                        retriever_type=selected_models.retriever_type.value,
+                        dpr_question_encoder=selected_models.dpr_query,
+                        dpr_context_encoder=selected_models.dpr_context,
+                        reader_encoder=selected_models.reader,
+                        use_gpu=st.session_state['device'] == 'gpu'
+                    )
+
+                    corpus_language = languages.get(alpha2=corpus_to_id[corpus_selection]['language']).name.lower()
+                    model_languages = get_model_languages()
+                    if selected_models.retriever_type.value == 'dpr':
+                        query_encoder_language = model_languages['retriever']['query']
+                        passage_encoder_language = model_languages['retriever']['context']
+
+                        if corpus_language != query_encoder_language:
+                            st.warning(f'Query encoder\'s language ({query_encoder_language}) '
+                                       f'is not the same as corpus\' ({corpus_language})')
+                        if corpus_language != passage_encoder_language:
+                            st.warning(f'Passage encoder\'s language ({passage_encoder_language}) '
+                                       f'is not the same as corpus\' ({corpus_language})')
+
+                    if corpus_language != model_languages['reader']['encoder']:
+                        st.warning(f'Reader encoder\'s language ({model_languages["reader"]["encoder"]}) '
+                                   f'is not the same as corpus\' ({corpus_language})')
+
                     answers = predict_qa(
-                        corpus_id=corpus_to_id[corpus_selection],
+                        corpus_id=corpus_to_id[corpus_selection]['id'],
                         questions=questions,
                         retriever_type=selected_models.retriever_type.value,
                         dpr_question_encoder=selected_models.dpr_query,

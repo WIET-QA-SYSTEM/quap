@@ -86,7 +86,7 @@ def draw_question_answering():
             with st.spinner(f"Answering"):
                 runtime_error = False
                 try:
-                    load_qa_models(
+                    load_nlp_models(
                         retriever_type=selected_models.retriever_type.value,
                         dpr_question_encoder=selected_models.dpr_query,
                         dpr_context_encoder=selected_models.dpr_context,

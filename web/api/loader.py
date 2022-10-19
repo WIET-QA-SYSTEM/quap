@@ -116,3 +116,16 @@ def load_nlp_models(
     main_state_registry.save()
 
     return retriever, main_state_registry.farm_reader, main_state_registry.generator
+
+
+def get_model_languages() -> dict[str, dict[str, str]]:
+    reg = main_state_registry
+    return {
+        'retriever': {
+            'query': reg.dpr_retriever.query_encoder.language if reg.dpr_retriever is not None else None,
+            'context': reg.dpr_retriever.passage_encoder.language if reg.dpr_retriever is not None else None,
+        },
+        'reader': {
+            'encoder': reg.farm_reader.inferencer.model.language_model.language if reg.farm_reader is not None else None
+        }
+    }

@@ -26,6 +26,7 @@ documents = Table(
     metadata,
     Column('id', UUID(as_uuid=True), primary_key=True),
     Column('name', String(256), nullable=False),
+    Column('language', String(2), nullable=False),
     Column('data_corpus_id', UUID(as_uuid=True), ForeignKey('data_corpora.id', ondelete='CASCADE'), nullable=False),
 )
 

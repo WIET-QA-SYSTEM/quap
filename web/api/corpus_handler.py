@@ -16,6 +16,7 @@ def get_data_corpora() -> list[dict[str, Any]]:
         corpora.append({
             'id': corpus.id,
             'name': corpus.name,
+            'language': corpus.language,
             'document_names': [doc.name for doc in corpus.documents]
         })
     return corpora

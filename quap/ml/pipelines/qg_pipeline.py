@@ -27,6 +27,12 @@ class QGPipeline:
 
         results_for_document = {}
 
+        try:
+            self.storage.get_all_documents(index=corpus.contexts_index)
+        except:
+            # Storage is empty or inaccessible 
+            return {}
+
         for document in self.storage.get_all_documents(index=corpus.contexts_index):
             doc_result = pipeline.run(documents=[document])
 

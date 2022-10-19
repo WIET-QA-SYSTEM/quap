@@ -1,4 +1,3 @@
-from calendar import c
 from dataclasses import dataclass
 from typing import Optional, Union
 import logging
@@ -22,7 +21,7 @@ class StateRegistry:
         'global_farm_reader', None)
     generator: Optional[QuestionGenerator] = st.session_state.get(
         'global_question_generator', None)
-    use_gpu: str = st.session_state.get('device', 'cpu') == 'gpu'
+    use_gpu: bool = st.session_state.get('device', 'cpu') == 'gpu'
 
     def save(self): 
         st.session_state['global_bm25_retriever'] = self.bm25_retriever
@@ -99,7 +98,6 @@ def load_nlp_models(
             reader_encoder, use_gpu=use_gpu)
 
     if load_generator:
-
         try:
             current_generator_name = main_state_registry.generator.model.name_or_path
         except Exception as ex:

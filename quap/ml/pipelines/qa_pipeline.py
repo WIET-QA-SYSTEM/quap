@@ -29,10 +29,9 @@ class QAPipeline:
 
     def eval(self, dataset: Dataset) -> dict[str, dict[str, float]]:
         corpus = dataset.corpus
-
         self.retriever.index(corpus, self.storage)
 
-        eval_labels = self.storage.get_all_labels_aggregated(index=dataset.labels_index,  # todo ???
+        eval_labels = self.storage.get_all_labels_aggregated(index=dataset.labels_index,
                                                              drop_negative_labels=True,
                                                              drop_no_answers=True)
 

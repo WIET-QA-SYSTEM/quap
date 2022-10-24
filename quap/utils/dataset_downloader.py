@@ -35,9 +35,9 @@ class DatasetDownloader:
 
     @persistent_cache('datasets')
     def download(self, dataset_name: str) -> Path:
-        if dataset_name == self.NQ_KEY:
+        if dataset_name == DatasetDownloader.NQ_KEY:
             return self._fetch_natural_questions()
-        elif dataset_name == self.SQUAD_KEY:
+        elif dataset_name == DatasetDownloader.SQUAD_KEY:
             return self._fetch_squad()
         else:
             raise ValueError(f'unknown dataset name - {dataset_name}')

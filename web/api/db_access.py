@@ -1,5 +1,5 @@
-from argparse import ArgumentError
-import sqlalchemy
+import os
+
 import streamlit as st
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -8,9 +8,18 @@ from sqlalchemy.exc import ArgumentError as AlchemyArgumentError
 from quap.data.orm import metadata, start_mappers
 from quap.data.repository import DataCorpusRepository, DocumentRepository, DatasetRepository
 
+
+def postgresql_connection_string() -> str:
+    host = os.environ['POSTGRESQL_HOST']
+    port = os.environ['POSTGRESQL_PORT']
+    db = os.environ['POSTGRESQL_DB']
+    user = os.environ['POSTGRESQL_USER']
+    password = os.environ['POSTGRESQL_PASSWORD']
+    return f'postgresql://{user}:{password}@{host}:{port}/{db}'
+
+
 if not st.session_state.get('mappers_started', False):
-    st.session_state['engine'] = create_engine(
-        "postgresql://postgres:postgres@localhost:5432/postgres")
+    st.session_state['engine'] = create_engine(postgresql_connection_string())
     metadata.create_all(st.session_state['engine'])
 
     try:

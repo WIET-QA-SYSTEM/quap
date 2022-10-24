@@ -11,8 +11,18 @@ from quap.utils.preprocessing.format_unifier import FormatUnifier
 
 
 @pytest.fixture
-def engine() -> Engine:
-    engine = create_engine(os.environ['POSTGRESQL_CONNECTION_STRING'])
+def postgresql_connection_string() -> str:
+    host = os.environ['POSTGRESQL_HOST']
+    port = os.environ['POSTGRESQL_PORT']
+    db = os.environ['POSTGRESQL_DB']
+    user = os.environ['POSTGRESQL_USER']
+    password = os.environ['POSTGRESQL_PASSWORD']
+    return f'postgresql://{user}:{password}@{host}:{port}/{db}'
+
+
+@pytest.fixture
+def engine(postgresql_connection_string: str) -> Engine:
+    engine = create_engine(postgresql_connection_string)
     metadata.create_all(engine)
     yield engine
 

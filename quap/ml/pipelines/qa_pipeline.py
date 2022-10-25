@@ -1,4 +1,5 @@
 from typing import Union
+import logging
 
 from haystack.nodes import FARMReader
 from haystack.pipelines import ExtractiveQAPipeline
@@ -6,6 +7,9 @@ from haystack.pipelines import ExtractiveQAPipeline
 from quap.data.models import DataCorpus, Dataset
 from quap.document_stores import DataCorpusStore
 from quap.ml.nodes.retriever import IndexedBM25, IndexedDPR
+
+
+logger = logging.getLogger('quap')
 
 
 class QAPipeline:
@@ -20,7 +24,9 @@ class QAPipeline:
         if isinstance(questions, str):
             questions = [questions]
 
+        logger.info('indexing started')
         self.retriever.index(corpus, self.storage)
+        logger.info('indexing finished')
 
         pipeline = ExtractiveQAPipeline(self.reader, self.retriever)
         return pipeline.run_batch(questions, params={
@@ -29,7 +35,9 @@ class QAPipeline:
 
     def eval(self, dataset: Dataset) -> dict[str, dict[str, float]]:
         corpus = dataset.corpus
+        logger.info('indexing started')
         self.retriever.index(corpus, self.storage)
+        logger.info('indexing finished')
 
         eval_labels = self.storage.get_all_labels_aggregated(index=dataset.labels_index,
                                                              drop_negative_labels=True,

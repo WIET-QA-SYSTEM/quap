@@ -1,5 +1,5 @@
 import streamlit as st
-from api import get_data_corpora, upload
+from api import get_data_corpora, upload_corpus
 
 
 def draw_data_corpuses():
@@ -30,7 +30,7 @@ def draw_data_corpuses():
                     if corpus_name in list(name_to_id.keys()):
                         st.warning("Corpus with this name already exists!")
                     else:
-                        upload([], [], None, corpus_name)
+                        upload_corpus([], [], None, corpus_name)
                         st.info("Adding corpus: " + corpus_name)
                         st.experimental_rerun()
                 except Exception as e:
@@ -83,8 +83,8 @@ def draw_data_corpuses():
                         names_list.append(uploaded_file.name)
                         bytes_list.append(bytes_data)
 
-                    upload(bytes_list, names_list,
-                           name_to_id[str(corpus_selection).strip()])
+                    upload_corpus(bytes_list, names_list,
+                                  name_to_id[str(corpus_selection).strip()])
                         
                     st.experimental_rerun()
 

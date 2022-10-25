@@ -44,7 +44,7 @@ def load_nlp_models(
         load_generator: bool = False,
         load_retriever: bool = True,
         invalidate_unused: bool = True
-) -> tuple[Union[IndexedDPR, IndexedBM25], FARMReader]:
+) -> tuple[Union[IndexedDPR, IndexedBM25], FARMReader, QuestionGenerator]:
 
     if invalidate_unused:
         if load_retriever == False:

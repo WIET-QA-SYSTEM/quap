@@ -155,7 +155,7 @@ def predict(
     # TODO what type answers are?
 
 
-@persistent_cache('evaluate')
+# @persistent_cache('evaluate')
 def evaluate(
     dataset_id: Optional[UUID] = None,
     dataset_name: Optional[str] = None,
@@ -164,9 +164,6 @@ def evaluate(
     dpr_context_encoder: str = 'facebook/dpr-ctx_encoder-single-nq-base',
     reader_encoder: str = 'deepset/roberta-base-squad2',
 ):
-
-    # todo check if results are already in the evaluation cache
-
 
     if dataset_id is not None:
         dataset = dataset_repository.get(dataset_id)
@@ -204,8 +201,8 @@ def evaluate(
             # Czy .add() i .commit() powinny być w tym miejscu, czy jakoś na końcu?
 
             corpus = DataCorpus(name=dataset_name)
-            corpus_repository.add(corpus)
-            corpus_repository.commit()
+            for original_doc in original_docs:
+                Document(original_doc.meta['name'], 'en', corpus)
 
             dataset = Dataset(name=dataset_name, corpus=corpus)
             dataset_repository.add(dataset)

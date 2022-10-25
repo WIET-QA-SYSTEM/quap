@@ -19,21 +19,24 @@ def clean_directory(path: Union[str, Path]) -> None:
     if path.exists() and not path.is_dir():
         raise NotADirectoryError(f'{path} must be a directory')
 
-    os.makedirs(path, exist_ok=True)
-    shutil.rmtree(path)
+    logger.info(path.exists())
+    if path.exists():
+        shutil.rmtree(path)
     os.makedirs(path, exist_ok=True)
 
 
 class DatasetDownloader:
     """Utility-class providing access to downloading datasets or getting their path if dataset already exists."""
 
-    NQ_KEY = 'nq'
+    NQ_KEY = 'natural-questions'
     SQUAD_KEY = 'squad'
+
+    SUPPORTED_DATASETS = [NQ_KEY, SQUAD_KEY]
 
     def __init__(self, datasets_dir: Union[str, Path] = '.cache/datasets') -> None:
         self.datasets_dir: Path = Path(datasets_dir).resolve()
 
-    @persistent_cache('datasets')
+    @persistent_cache('datasets', skip_self=True)
     def download(self, dataset_name: str) -> Path:
         if dataset_name == DatasetDownloader.NQ_KEY:
             return self._fetch_natural_questions()
@@ -53,6 +56,7 @@ class DatasetDownloader:
             downloaded_file = dataset_dir / filename
             if not downloaded_file.exists() or not downloaded_file.is_file():
                 logger.error("Natural Questions dataset has an incorrect filename")
+                logger.error(str(os.listdir(dataset_dir)))
                 raise RuntimeError(f'downloaded item has an incorrect filename, should be {downloaded_file.name}')
 
             dataset_path = downloaded_file.rename(downloaded_file.parent / f"{DatasetDownloader.NQ_KEY}.json")

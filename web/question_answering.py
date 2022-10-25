@@ -1,14 +1,12 @@
 import logging
-from uuid import uuid4
 
 import streamlit as st
 from annotated_text import annotation
 from haystack import Answer
-from iso639 import languages
 from markdown import markdown
 
-from api import (get_data_corpora, get_model_languages, load_nlp_models,
-                 predict_qa)
+from api import get_data_corpora, load_nlp_models, predict_qa
+from api.utils import language_incompatibility_warning
 from model_selection.selected_models import SelectedModels
 
 logger = logging.getLogger(__name__)
@@ -94,22 +92,7 @@ def draw_question_answering():
                         use_gpu=st.session_state['device'] == 'gpu'
                     )
 
-                    corpus_language = languages.get(alpha2=corpus_to_id[corpus_selection]['language']).name.lower()
-                    model_languages = get_model_languages()
-                    if selected_models.retriever_type.value == 'dpr':
-                        query_encoder_language = model_languages['retriever']['query']
-                        passage_encoder_language = model_languages['retriever']['context']
-
-                        if corpus_language != query_encoder_language:
-                            st.warning(f'Query encoder\'s language ({query_encoder_language}) '
-                                       f'is not the same as corpus\' ({corpus_language})')
-                        if corpus_language != passage_encoder_language:
-                            st.warning(f'Passage encoder\'s language ({passage_encoder_language}) '
-                                       f'is not the same as corpus\' ({corpus_language})')
-
-                    if corpus_language != model_languages['reader']['encoder']:
-                        st.warning(f'Reader encoder\'s language ({model_languages["reader"]["encoder"]}) '
-                                   f'is not the same as corpus\' ({corpus_language})')
+                    language_incompatibility_warning(corpus_to_id[corpus_selection]['language'], selected_models)
 
                     answers = predict_qa(
                         corpus_id=corpus_to_id[corpus_selection]['id'],
@@ -144,7 +127,7 @@ def draw_question_answering():
                             start_idx = answer_obj.offsets_in_context[0].start
                             end_idx = answer_obj.offsets_in_context[0].end
 
-                            document_name = answer_obj.meta['document_name']
+                            document_name = answer_obj.meta['name']
 
                             st.write(
                                 markdown(

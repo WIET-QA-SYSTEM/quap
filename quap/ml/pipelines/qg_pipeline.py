@@ -21,7 +21,13 @@ class QGPipeline:
         self.generator = generator
         self.reader = reader
 
-    def __call__(self, corpus: DataCorpus, pairs_per_document: int = 5, answers_per_pair: int = 3):
+    def __call__(
+            self,
+            corpus: DataCorpus,
+            pairs_per_document: int = 5,
+            answers_per_pair: int = 3
+    ) -> dict[str, list[QGResult]]:
+
         pipeline = QuestionAnswerGenerationPipeline(
             self.generator, self.reader)
 

@@ -1,5 +1,6 @@
 import streamlit as st
-from api import get_data_corpora, upload
+
+from api import get_data_corpora, upload, create_data_corpus
 
 
 def draw_data_corpuses():
@@ -8,13 +9,13 @@ def draw_data_corpuses():
 
     data_corpuses = get_data_corpora()
 
-    name_to_files = {
-        corpus['name']: corpus['document_names']
+    name2documents = {
+        corpus['name']: corpus['documents']
         for corpus in data_corpuses
     }
 
-    name_to_id = {
-        corpus['name']: corpus['id']
+    name2corpus = {
+        corpus['name']: corpus
         for corpus in data_corpuses
     }
 
@@ -25,37 +26,33 @@ def draw_data_corpuses():
             submit = st.form_submit_button("Add corpus")
 
             if submit:
-                try:
-                    corpus_name = str(corpus_name).strip()
-                    if corpus_name in list(name_to_id.keys()):
-                        st.warning("Corpus with this name already exists!")
-                    else:
-                        upload([], [], None, corpus_name)
-                        st.info("Adding corpus: " + corpus_name)
-                        st.experimental_rerun()
-                except Exception as e:
-                    # TODO do something with the exception?
-                    st.warning("Corpus already exists " + str(e))
+                corpus_name = str(corpus_name).strip()
+                if corpus_name in name2corpus:
+                    st.warning("Corpus with this name already exists!")
+                else:
+                    create_data_corpus(corpus_name)
+                    st.info("Adding corpus: " + corpus_name)
+                    st.experimental_rerun()
 
     with st.expander("Modify a data corpus"):
         corpus_selection = st.selectbox(
-            "Select a data corpus", list(name_to_id.keys()))
+            "Select a data corpus", list(name2corpus.keys()))
 
         if corpus_selection is not None:
 
-            if corpus_selection in name_to_files and len(name_to_files[corpus_selection]):
+            if corpus_selection in name2documents and name2documents[corpus_selection]:
                 st.markdown("***")
                 st.write("Files in the data corpus: ")
 
-                for file in name_to_files[corpus_selection]:
+                for document in name2documents[corpus_selection]:
                     col1, col2, = st.columns(2)
 
                     with col1:
-                        st.write(file)
+                        st.write(document['name'])
 
                     with col2:
                         del_btn = st.button(
-                            "Delete", key=f"delete_{file}_{corpus_selection}")
+                            "Delete", key=f"delete_{document['name']}_{corpus_selection}")
 
                     if del_btn:
                         # TODO file removal
@@ -75,26 +72,17 @@ def draw_data_corpuses():
                 if upload_btn:
                     print("uploading files...")
 
-                    names_list = []
-                    bytes_list = []
-
-                    for uploaded_file in uploader:
-                        bytes_data = uploaded_file.read()
-                        names_list.append(uploaded_file.name)
-                        bytes_list.append(bytes_data)
-
-                    upload(bytes_list, names_list,
-                           name_to_id[str(corpus_selection).strip()])
-                        
+                    upload(name2corpus[str(corpus_selection)]['id'], list(uploader))
                     st.experimental_rerun()
 
     with st.expander("Remove a data corpus"):
         corpus_selection = st.selectbox(
-            "Select a data corpus for removal", name_to_id.keys())
+            "Select a data corpus for removal", name2corpus.keys())
 
         if corpus_selection != None:
             remove_btn = st.button("Remove")
 
             if remove_btn:
+                # todo add corpus removal
                 st.warning("Corpus has been removed: " + str(corpus_selection))
                 print("Removing corpus...")

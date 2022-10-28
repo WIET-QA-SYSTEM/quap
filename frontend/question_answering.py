@@ -1,13 +1,12 @@
 import logging
-from uuid import uuid4
 
 import streamlit as st
 from annotated_text import annotation
-from haystack import Answer
 from iso639 import languages
 from markdown import markdown
 
-from api import (get_data_corpora, get_model_languages, load_nlp_models,
+from api import (get_data_corpora,
+                 get_model_languages,
                  predict_qa)
 from model_selection.selected_models import SelectedModels
 
@@ -86,19 +85,11 @@ def draw_question_answering():
             with st.spinner(f"Answering"):
                 runtime_error = False
                 try:
-                    load_nlp_models(
-                        retriever_type=selected_models.retriever_type.value,
-                        dpr_question_encoder=selected_models.dpr_query,
-                        dpr_context_encoder=selected_models.dpr_context,
-                        reader_encoder=selected_models.reader,
-                        use_gpu=st.session_state['device'] == 'gpu'
-                    )
-
                     corpus_language = languages.get(alpha2=corpus_to_id[corpus_selection]['language']).name.lower()
                     model_languages = get_model_languages()
                     if selected_models.retriever_type.value == 'dpr':
                         query_encoder_language = model_languages['retriever']['query']
-                        passage_encoder_language = model_languages['retriever']['context']
+                        passage_encoder_language = model_languages['retriever']['passage']
 
                         if corpus_language != query_encoder_language:
                             st.warning(f'Query encoder\'s language ({query_encoder_language}) '
@@ -118,7 +109,7 @@ def draw_question_answering():
                         dpr_question_encoder=selected_models.dpr_query,
                         dpr_context_encoder=selected_models.dpr_context,
                         reader_encoder=selected_models.reader,
-                        use_gpu=st.session_state.get('device', 'cpu') == 'gpu'
+                        device=st.session_state.get('device', 'cpu')
                     )
                 except RuntimeError as ex:
                     logger.error(str(ex))
@@ -128,31 +119,31 @@ def draw_question_answering():
 
             if not runtime_error:
                 st.write("### Answers:")
-                for query, answers_list in zip(answers['queries'], answers['answers']):
+                for query, records in answers.items():
 
                     with st.expander(query):
 
-                        for i, answer_obj in enumerate(answers_list[:3]):
+                        for i, record in enumerate(records[:3]):
                             if i > 0:
                                 st.markdown('---')
 
-                            answer_obj: Answer = answer_obj
-
-                            answer = answer_obj.answer
-                            context = answer_obj.context
-
-                            start_idx = answer_obj.offsets_in_context[0].start
-                            end_idx = answer_obj.offsets_in_context[0].end
-
-                            document_name = answer_obj.meta['document_name']
+                            answer = record['answer']
+                            score = record['answer_score']
+                            document_name = record['document_name']
+                            context = record['context']
+                            start_idx = record['context_offset']
+                            end_idx = start_idx + len(answer)
 
                             st.write(
                                 markdown(
-                                    context[:start_idx] + str(annotation(answer, "ANSWER", "#308896")) + context[end_idx:]),
+                                    context[:start_idx]
+                                    + str(annotation(answer, "ANSWER", "#308896"))
+                                    + context[end_idx:]
+                                ),
                                 unsafe_allow_html=True,
                             )
-                            st.markdown(f"**Relevance:** {answer_obj.score:.4f} -  **Source:** {document_name}")
+                            st.markdown(f"**Relevance:** {score:.4f} -  **Source:** {document_name}")
 
-                        if not answers_list:
+                        if not records:
                             st.info('Model is not certain what the answer to your question is. Try to reformulate it!')
 

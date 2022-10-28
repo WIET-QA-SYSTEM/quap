@@ -17,6 +17,29 @@ class QAPipeline:
 
     # TODO add params to the call?
     def __call__(self, corpus: DataCorpus, questions: Union[str, list[str]]):
+        """
+        Returns dictionaries containing answers sorted by (desc.) score.
+        Example:
+         ```python
+            |{
+            |    'queries': ['Who is the father of Arya Stark?'],
+            |    'answers': [[Answer(
+            |                 'answer': 'Eddard,',
+            |                 'context': "She travels with her father, Eddard, to King's Landing when he is",
+            |                 'score': 0.9787139466668613,
+            |                 'offsets_in_context': [Span(start=29, end=35],
+            |                 'offsets_in_context': [Span(start=347, end=353],
+            |                 'document_id': '88d1ed769d003939d3a0d28034464ab2'
+            |                 ),...
+            |              ]]
+            |}
+
+        # todo parameters description
+        :param corpus:
+        :param questions:
+        :return:
+        """
+
         if isinstance(questions, str):
             questions = [questions]
 

@@ -19,7 +19,6 @@ def clean_directory(path: Union[str, Path]) -> None:
     if path.exists() and not path.is_dir():
         raise NotADirectoryError(f'{path} must be a directory')
 
-    logger.info(path.exists())
     if path.exists():
         shutil.rmtree(path)
     os.makedirs(path, exist_ok=True)

@@ -36,6 +36,6 @@ def upload_corpus(corpus_id: UUID, files: list[io.BytesIO]) -> None:
 
 
 def download_dataset(dataset_name: str) -> None:
-    response = requests.post('http://localhost:9100/datasets/download', json={'name': dataset_name})
+    response = requests.post('http://localhost:9100/data/datasets/download', json={'name': dataset_name})
     if not response.ok:
         pass  # todo do something?

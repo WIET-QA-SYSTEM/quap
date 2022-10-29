@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Request
+from fastapi_cache.decorator import cache
+from fastapi_cache.coder import JsonCoder
 from starlette import status
 from sqlalchemy import exc
 
@@ -116,13 +118,14 @@ async def predict_qg(request: QuestionGenerationPOSTRequest):
 
 
 @router.post('/evaluate/qa', response_model=QuestionAnsweringEvaluationPOSTResponse)
-async def evaluate_qa(request: QuestionAnsweringEvaluationPOSTRequest):
+@cache(coder=JsonCoder)
+async def evaluate_qa(evaluation: QuestionAnsweringEvaluationPOSTRequest):
     try:
-        dataset = dataset_repository.get(request.dataset_id)
+        dataset = dataset_repository.get(evaluation.dataset_id)
     except exc.NoResultFound:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
-    pipeline = create_qa_pipeline(request)
+    pipeline = create_qa_pipeline(evaluation)
     # TODO how do we interrupt this? or interrupt evaluation?
     # TODO should this be another global thread? process? so we can send some signal to it?
     metrics = pipeline.eval(dataset)

@@ -35,6 +35,7 @@ split_preprocessor = PreProcessor(split_by='word', split_length=200, split_overl
                                   clean_whitespace=False, progress_bar=False)
 
 
+# todo can use https://fastapi.tiangolo.com/advanced/advanced-dependencies/ to inject dependencies
 @router.get('/corpora', response_model=DataCorporaGETResponse)
 async def get_corpora():
     corpora = corpus_repository.list()

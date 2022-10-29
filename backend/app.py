@@ -1,7 +1,12 @@
 import logging
 
 from fastapi import FastAPI
+
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+
 import uvicorn
+from redis import asyncio as aioredis
 
 import routers
 from settings import settings
@@ -35,6 +40,17 @@ app = FastAPI(
 app.include_router(routers.data_router)
 app.include_router(routers.state_router)
 app.include_router(routers.ml_router)
+
+
+@app.on_event('startup')
+async def startup():
+    redis = aioredis.from_url(
+        f'redis://{settings.REDIS_HOST}',
+        port=int(settings.REDIS_PORT),
+        encoding='utf8',
+        decode_responses=True
+    )
+    FastAPICache.init(RedisBackend(redis), prefix='fastapi-cache')
 
 
 if __name__ == '__main__':

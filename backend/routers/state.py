@@ -1,7 +1,7 @@
 from fastapi import APIRouter
+from torch.cuda import is_available
 
 from service.state import ModelState
-
 from models.state import ModelsLanguagesGETResponse
 
 
@@ -33,3 +33,7 @@ async def model_languages():
             'encoder_decoder': None  # fixme how to get it? haven't found any trace of language :)
         }
     }
+
+@router.get('/cuda')
+async def is_cuda_available():
+    return {'available': is_available()}

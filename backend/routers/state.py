@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from torch.cuda import is_available
 
 from service.state import ModelState
-from models.state import ModelsLanguagesGETResponse
+from models.state import ModelsLanguagesGETResponse, CudaGETResponse
 
 
 router = APIRouter(prefix='/state')
@@ -34,6 +34,6 @@ async def model_languages():
         }
     }
 
-@router.get('/cuda')
+@router.get('/cuda', response_model=CudaGETResponse)
 async def is_cuda_available():
     return {'available': is_available()}

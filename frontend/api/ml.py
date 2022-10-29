@@ -2,7 +2,6 @@ from typing import Union
 from collections import defaultdict
 from uuid import UUID
 
-import torch
 import requests
 
 
@@ -120,5 +119,9 @@ def evaluate(
 
 
 def is_cuda_available() -> bool:
-    # todo move this to fastapi `routers/state.py` :)
-    return torch.cuda.is_available()
+    response = requests.get('http://localhost:9100/state/cuda')
+    if not response.ok:
+        pass  # todo do something?
+
+    cuda_available: bool = response.json()['available']
+    return cuda_available

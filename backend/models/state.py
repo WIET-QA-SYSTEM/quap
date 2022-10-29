@@ -49,3 +49,9 @@ class ReaderSpecification(BaseModel):
 class QuestionGeneratorSpecification(BaseModel):
     encoder_decoder: str
     device: str = DeviceField
+
+
+# ============== cuda ==============
+
+class CudaGETResponse(BaseModel):
+    available: bool

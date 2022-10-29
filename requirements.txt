@@ -15,6 +15,11 @@ tika~=1.24
 Markdown==3.4.1
 iso-639==0.4.5
 
+# backend
+uvicorn~=0.18.3
+fastapi~=0.85.1
+pydantic~=1.9.2
+starlette~=0.20.4
 
 torch==1.12 # keep torch at the bottom of the list to allow canceling in case of 
 # cuda mismatch

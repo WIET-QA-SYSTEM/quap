@@ -12,7 +12,6 @@ from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
 from quap.utils.preprocessing import FormatUnifier
 from quap.utils.dataset_downloader import DatasetDownloader
 
-# todo how to make these relative imports? always had a problem with that
 from repositories import (
     session,
     dataset_repository,

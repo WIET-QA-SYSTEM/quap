@@ -39,7 +39,6 @@ class DatasetDownloader:
     def is_supported(self, dataset_name: str) -> bool:
         return dataset_name in self.SUPPORTED_DATASETS
 
-    @persistent_cache('datasets', skip_self=True)
     def download(self, dataset_name: str) -> Path:
         if dataset_name == DatasetDownloader.NQ_KEY:
             return self._fetch_natural_questions()

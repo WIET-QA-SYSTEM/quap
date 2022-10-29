@@ -81,7 +81,7 @@ async def predict_qa(request: QuestionAnsweringInferencePOSTRequest):
                 'question': query,
                 'answer': answer.answer,
                 'answer_score': answer.score,
-                'document_name': answer.meta['document_name'],
+                'document_name': answer.meta['name'],
                 'context': answer.context,
                 'context_offset': answer.offsets_in_context[0].start
             })
@@ -107,7 +107,7 @@ async def predict_qg(request: QuestionGenerationPOSTRequest):
                     'question': qg_result.question,
                     'answer': answer.answer,
                     'answer_score': answer.score,
-                    'document_name': answer.meta['document_name'],
+                    'document_name': answer.meta['name'],
                     'context': answer.context,
                     'context_offset': answer.offsets_in_context[0].start
                 })

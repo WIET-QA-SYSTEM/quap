@@ -21,7 +21,7 @@ class QuestionAnsweringModelSpecificationsMixin(BaseModel):
 
 
 # ==== inference ====
-class QuestionAnsweringInferencePOSTRequest(QuestionAnsweringModelSpecificationsMixin, BaseModel):  # todo should it be this way?
+class QuestionAnsweringInferencePOSTRequest(QuestionAnsweringModelSpecificationsMixin, BaseModel):
     corpus_id: UUID
     questions: list[str] = Field(min_length=1)
 

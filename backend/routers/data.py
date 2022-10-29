@@ -20,6 +20,7 @@ from repositories import (
     document_repository
 )
 from models.data import (
+    DataCorpusGETResponse,
     DataCorporaGETResponse,
     DatasetsGETResponse,
     CreateDataCorpusPOSTRequest,
@@ -39,7 +40,7 @@ split_preprocessor = PreProcessor(split_by='word', split_length=200, split_overl
 async def get_corpora():
     corpora = corpus_repository.list()
     datasets = dataset_repository.list()
-    datasets_corpora_ids = set([dataset.id for dataset in datasets])
+    datasets_corpora_ids = set([dataset.corpus.id for dataset in datasets])
 
     response = []
     for corpus in corpora:
@@ -77,6 +78,12 @@ async def upload_file_to_corpus(corpus_id: UUID, file: UploadFile = File(...)):
     except exc.NoResultFound:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
+    datasets = dataset_repository.list()
+    datasets_corpora_ids = set([dataset.corpus.id for dataset in datasets])
+    if corpus.id in datasets_corpora_ids:
+        # todo message - cannot modify frozen corpora
+        return Response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+
     filename = file.filename
     text = format_unifier.extract_text(await file.read())
     if not text:
@@ -98,10 +105,25 @@ async def upload_file_to_corpus(corpus_id: UUID, file: UploadFile = File(...)):
 @router.get('/datasets', response_model=DatasetsGETResponse)
 async def get_datasets():
     datasets = dataset_repository.list()
-    response = [
-        {'id': dataset.id, 'name': dataset.name, 'corpus_id': dataset.corpus.id}
-        for dataset in datasets
-    ]
+
+    response = []
+    for dataset in datasets:
+        corpus = dataset.corpus
+        response.append({
+            'id': dataset.id,
+            'name': dataset.name,
+            'corpus': {
+                'id': corpus.id,
+                'name': corpus.name,
+                'language': corpus.language,
+                'documents': [
+                    {'id': document.id, 'name': document.name, 'language': document.language}
+                    for document in corpus.documents
+                ],
+                'frozen': True
+            }
+        })
+
     return {'datasets': response}
 
 

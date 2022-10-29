@@ -26,7 +26,7 @@ class DataCorporaGETResponse(BaseModel):
 class DatasetGETResponse(BaseModel):
     id: UUID
     name: str
-    corpus_id: UUID
+    corpus: DataCorpusGETResponse
 
 
 class DatasetsGETResponse(BaseModel):

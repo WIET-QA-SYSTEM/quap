@@ -57,5 +57,8 @@ class DatasetRepository(BaseSQLAlchemyRepository):
     def get(self, id: UUID) -> Dataset:
         return self.session.query(Dataset).filter_by(id=id).one()
 
+    def get_by_name(self, name: str) -> Dataset:
+        return self.session.query(Dataset).filter_by(name=name).one()
+
     def list(self) -> list[Dataset]:
         return self.session.query(Dataset).all()

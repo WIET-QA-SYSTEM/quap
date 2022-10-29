@@ -34,7 +34,7 @@ datasets = Table(
     'datasets',
     metadata,
     Column('id', UUID(as_uuid=True), primary_key=True),
-    Column('name', String(50), nullable=False, unique=True),
+    Column('name', String(50), nullable=False, unique=True, index=True),
     Column('data_corpus_id', UUID(as_uuid=True), ForeignKey('data_corpora.id'), nullable=False)
 )
 

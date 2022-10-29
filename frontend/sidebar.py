@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
+
 from model_selection.selected_models import RetrieverType, SelectedModels
 from api.ml import is_cuda_available
 

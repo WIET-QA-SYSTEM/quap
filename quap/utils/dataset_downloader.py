@@ -36,6 +36,9 @@ class DatasetDownloader:
     def __init__(self, datasets_dir: Union[str, Path] = '.cache/datasets') -> None:
         self.datasets_dir: Path = Path(datasets_dir).resolve()
 
+    def is_supported(self, dataset_name: str) -> bool:
+        return dataset_name in self.SUPPORTED_DATASETS
+
     @persistent_cache('datasets', skip_self=True)
     def download(self, dataset_name: str) -> Path:
         if dataset_name == DatasetDownloader.NQ_KEY:

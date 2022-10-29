@@ -2,7 +2,7 @@ import logging
 
 import streamlit as st
 
-from api import get_datasets, load_nlp_models, evaluate
+from api import get_datasets, evaluate
 from api.utils import language_incompatibility_warning
 from model_selection.selected_models import SelectedModels
 
@@ -26,10 +26,10 @@ def show_evaluation(eval):
     
     with st.expander("Evaluation results", expanded=True):
         for component in eval.keys():
-            
+
             st.markdown("#### {}".format(component))
-            
-            for metric, value in eval['Retriever'].items():
+
+            for metric, value in eval[component].items():
                 if metric not in eval_names:
                     logging.warning(
                         "Metric name {} not found in translations and will not be displayed (interface.py)".format(metric)
@@ -64,14 +64,6 @@ def draw_evaluation():
             with st.spinner("Selected pipeline is being evaluated"):
                 runtime_error = False
                 try:
-                    load_nlp_models(
-                        retriever_type=selected_models.retriever_type.value,
-                        dpr_question_encoder=selected_models.dpr_query,
-                        dpr_context_encoder=selected_models.dpr_context,
-                        reader_encoder=selected_models.reader,
-                        use_gpu=st.session_state['device'] == 'gpu'
-                    )
-
                     corpus_language = name_to_dataset[dataset_selection]['corpus']['language']
                     language_incompatibility_warning(corpus_language, selected_models)
 
@@ -81,7 +73,7 @@ def draw_evaluation():
                         dpr_question_encoder=selected_models.dpr_query,
                         dpr_context_encoder=selected_models.dpr_context,
                         reader_encoder=selected_models.reader,
-                        use_gpu=st.session_state.get('device', 'cpu') == 'gpu'
+                        device=st.session_state.get('device', 'cpu')
                     )
                 except RuntimeError as ex:
                     logger.error(str(ex))

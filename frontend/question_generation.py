@@ -3,10 +3,8 @@ import logging
 
 from api import get_data_corpora, predict_qg
 from markdown import markdown
-from haystack import Answer
 from annotated_text import annotation
-from quap.ml.pipelines.qg_pipeline import QGResult
-from web.model_selection.selected_models import SelectedModels
+from frontend.model_selection.selected_models import SelectedModels
 
 
 def draw_question_generation():
@@ -55,7 +53,7 @@ def draw_question_generation():
                         corpus_id=corpus_to_id[corpus_selection],
                         reader_encoder=selected_models.reader,
                         generator=selected_models.question_generator,
-                        use_gpu=st.session_state.get('device', 'cpu') == 'gpu',
+                        device=st.session_state.get('device', 'cpu'),
                         pairs_per_document=int(n_questions)
                     )
                 except RuntimeError as ex:
@@ -84,26 +82,27 @@ def draw_question_generation():
                 with col2:
                     st.write("### Answers")
 
-                for file_name, qg_results in questions_and_answers.items():
-                    with st.expander(file_name):
-                        for result in qg_results:
-                            result: QGResult
+                for filename, qg_results in questions_and_answers.items():
+                    with st.expander(filename):
+                        for query, records in qg_results.items():
                             col1, col2 = st.columns(2)
                             with col1:
-                                st.write(result.question)
+                                st.write(query)
 
                             with col2:
-                                for answer_obj in result.answers:
-                                    answer_obj: Answer
-                                    answer = answer_obj.answer
-                                    context = answer_obj.context
-
-                                    start_idx = answer_obj.offsets_in_context[0].start
-                                    end_idx = answer_obj.offsets_in_context[0].end
+                                for record in records:
+                                    answer = record['answer']
+                                    answer_score = record['answer_score']
+                                    context = record['context']
+                                    start_idx = record['context_offset']
+                                    end_idx = start_idx + len(answer)
 
                                     st.write(
                                         markdown(
-                                            context[:start_idx] + str(annotation(answer, "ANSWER", "#308896")) + context[end_idx:]),
+                                            context[:start_idx]
+                                            + str(annotation(answer, "ANSWER", "#308896"))
+                                            + context[end_idx:]
+                                        ),
                                         unsafe_allow_html=True,
                                     )
-                                    st.markdown(f"**Relevance:** {answer_obj.score:.4f}")
+                                    st.markdown(f"**Relevance:** {answer_score:.4f}")

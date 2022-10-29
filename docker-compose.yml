@@ -17,12 +17,17 @@ services:
     environment:
       - "discovery.type=single-node"
       - "xpack.security.enabled=false"
+    networks:
+      - quap_net
+
   tika:
     image: apache/tika:latest
     container_name: quap-tika
     hostname: quap-tika
     ports:
       - 9998:9998
+    networks:
+      - quap_net
 
   postgresql:
     image: postgres
@@ -36,7 +41,43 @@ services:
       - POSTGRES_DB=postgres
     volumes:
       - quap_volume_postgres_data:/var/lib/postgresql/data/
+    networks:
+      - quap_net
+
+#  app:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: quap-app
+#    depends_on:
+#      - elasticsearch
+#      - tika
+#      - postgresql
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: 1
+#              capabilities: [ gpu ]
+#    ports:
+#      - 9100:9100
+#    environment:
+#        - ELASTICSEARCH_HOST=quap-elasticsearch
+#        - ELASTICSEARCH_PORT=9200
+#        - TIKA_HOST=quap-tika
+#        - TIKA_PORT=9998
+#        - POSTGRESQL_HOST=quap-postgresql
+#        - POSTGRESQL_PORT=5432
+#    # todo volume for cache
+#    networks:
+#      - quap_net
+
 
 volumes:
   quap_volume_elasticsearch_data:
   quap_volume_postgres_data:
+
+networks:
+  quap_net:
+    driver: bridge

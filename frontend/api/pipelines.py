@@ -1,8 +1,6 @@
 from typing import Union
 from collections import defaultdict
 from uuid import UUID
-
-import torch
 import requests
 
 
@@ -84,5 +82,6 @@ def predict_qa(
 
 
 def is_cuda_available() -> bool:
-    # todo move this to fast api :)
-    return torch.cuda.is_available()
+    response = requests.get('http://localhost:9100/state/cuda')
+    cuda_available: bool = response.json()['available']
+    return cuda_available

@@ -36,16 +36,24 @@ class IndexedDPR(DensePassageRetriever):
         model_index_name = self.index_name(corpus)
 
         documents = document_store.get_all_documents(corpus.contexts_index)
+        print('ids', [doc.id for doc in documents])
+        print('index exists', document_store.index_exists(model_index_name))
         if document_store.index_exists(model_index_name):
             model_documents = document_store.get_all_documents(model_index_name)
+            print('model index doc names', [doc.id for doc in model_documents])
 
             documents_ids = set([doc.id for doc in documents])
             model_documents_ids = set([doc.id for doc in model_documents])
 
+            new_ids = documents_ids - model_documents_ids
+            print('new ids', new_ids)
+            documents = [document for document in documents if document.id in new_ids]
+
             deleted_ids = model_documents_ids - documents_ids
+            print('deleted ids', deleted_ids)
             document_store.delete_documents(ids=list(deleted_ids), index=model_index_name)
 
-        document_store.write_documents(documents, index=model_index_name, duplicate_documents='skip')
+        document_store.write_documents(documents, index=model_index_name, duplicate_documents='fail')
         document_store.update_embeddings(self, index=model_index_name, update_existing_embeddings=False)
 
 

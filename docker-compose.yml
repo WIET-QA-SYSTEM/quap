@@ -44,6 +44,17 @@ services:
     networks:
       - quap_net
 
+  redis:
+    image: redis
+    container_name: quap-redis
+    hostname: quap-redis
+    ports:
+      - 6379:6379
+    volumes:
+      - quap_volume_redis_data:/data
+    networks:
+      - quap_net
+
 #  app:
 #    build:
 #      context: .
@@ -77,6 +88,7 @@ services:
 volumes:
   quap_volume_elasticsearch_data:
   quap_volume_postgres_data:
+  quap_volume_redis_data:
 
 networks:
   quap_net:

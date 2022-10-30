@@ -47,6 +47,10 @@ class Dataset:
     name: str
     corpus: DataCorpus
 
+    @property
+    def labels_index(self) -> str:
+        return normalize_index_name(f'{self.id}-labels')
+
 
 @dataclass
 class Document:

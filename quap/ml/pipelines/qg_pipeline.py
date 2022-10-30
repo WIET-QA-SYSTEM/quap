@@ -40,12 +40,12 @@ class QGPipeline:
         for document in self.storage.get_all_documents(index=corpus.contexts_index):
             doc_result = pipeline.run(documents=[document])
 
-            if document.meta['document_name'] not in results_for_document:
-                results_for_document[document.meta['document_name']] = []
+            if document.meta['name'] not in results_for_document:
+                results_for_document[document.meta['name']] = []
 
             for query, answers in zip(doc_result['queries'], doc_result['answers']):
 
-                results_for_document[document.meta['document_name']].append(
+                results_for_document[document.meta['name']].append(
                     (query, answers, max(answer.score for answer in answers))
                 )
 

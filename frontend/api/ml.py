@@ -1,6 +1,7 @@
 from typing import Union
 from collections import defaultdict
 from uuid import UUID
+
 import requests
 
 
@@ -81,7 +82,37 @@ def predict_qa(
     return dict(question2records)
 
 
-def is_cuda_available() -> bool:
-    response = requests.get('http://localhost:9100/state/cuda')
-    cuda_available: bool = response.json()['available']
-    return cuda_available
+def evaluate(
+    dataset_id: UUID,
+    retriever_type: str = 'dpr',
+    dpr_question_encoder: str = 'facebook/dpr-question_encoder-single-nq-base',
+    dpr_context_encoder: str = 'facebook/dpr-ctx_encoder-single-nq-base',
+    reader_encoder: str = 'deepset/roberta-base-squad2',
+    device: str = 'cpu',
+    params: dict = None
+) -> dict[str, dict[str, float]]:
+
+    response = requests.post('http://localhost:9100/ml/evaluate/qa', json={
+        "dataset_id": str(dataset_id),
+        "retriever_specification": {
+            "retriever_type": retriever_type,
+            "query_encoder": dpr_question_encoder,
+            "passage_encoder": dpr_context_encoder,
+            "device": device
+        },
+        "reader_specification": {
+            "encoder": reader_encoder,
+            "device": device
+        }
+    })
+
+    if not response.ok:
+        print(response.text)
+        pass  # todo do something?
+
+    response_json = response.json()
+
+    return {
+        'Retriever': response_json['retriever_metrics'],
+        'Reader': response_json['reader_metrics']
+    }

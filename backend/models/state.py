@@ -35,7 +35,7 @@ DeviceField = Field(regex=r'cpu|gpu')
 
 
 class RetrieverSpecification(BaseModel):
-    retriever_type: str = Field(regex=r'elasticsearch|dpr')
+    retriever_type: str = Field(regex=r'bm25|dpr')
     query_encoder: str
     passage_encoder: str
     device: str = DeviceField

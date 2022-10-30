@@ -13,6 +13,9 @@ class Settings:
     PROJECT_VERSION: str = "1.0.0"
     PROJECT_DESCRIPTION: str = ""
 
+    REDIS_HOST: str = os.environ["REDIS_HOST"]
+    REDIS_PORT: str = os.environ["REDIS_PORT"]
+
     POSTGRES_HOST: str = os.environ["POSTGRES_HOST"]
     POSTGRES_PORT: str = os.environ["POSTGRES_PORT"]
     POSTGRES_DB: str = os.environ["POSTGRES_DB"]

@@ -1,3 +1,6 @@
+import json
+import logging
+import uuid
 from typing import Union, Any, Optional
 from pathlib import Path
 from uuid import UUID
@@ -5,16 +8,23 @@ from uuid import UUID
 from sqlalchemy import exc
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from haystack.nodes import FARMReader
+from haystack.nodes import FARMReader, PreProcessor
+from haystack.document_stores.utils import eval_data_from_json
 
-from quap.data import DataCorpus, Document
+from quap.data import DataCorpus, Document, Dataset
 
 from quap.data.orm import start_mappers, metadata
-from quap.data.repository import DataCorpusRepository, DocumentRepository
+from quap.data.repository import DataCorpusRepository, DocumentRepository, DatasetRepository
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
 
 from quap.ml.pipelines import QAPipeline
 from quap.ml.nodes import IndexedBM25, IndexedDPR
+
+from quap.utils.dataset_downloader import DatasetDownloader
+from quap.utils.persistent_cache import persistent_cache
+
+
+logger = logging.getLogger('quap')
 
 
 # Create a data corpus
@@ -25,6 +35,7 @@ session = sessionmaker(bind=engine, expire_on_commit=False)()
 start_mappers()
 
 corpus_repository = DataCorpusRepository(session)
+dataset_repository = DatasetRepository(session)
 document_repository = DocumentRepository(session)
 
 
@@ -142,3 +153,81 @@ def predict(
 
     print(answers)
     # TODO what type answers are?
+
+
+# @persistent_cache('evaluate')
+def evaluate(
+    dataset_id: Optional[UUID] = None,
+    dataset_name: Optional[str] = None,
+    retriever_type: str = 'dpr',
+    dpr_question_encoder: str = 'facebook/dpr-question_encoder-single-nq-base',
+    dpr_context_encoder: str = 'facebook/dpr-ctx_encoder-single-nq-base',
+    reader_encoder: str = 'deepset/roberta-base-squad2',
+):
+
+    if dataset_id is not None:
+        dataset = dataset_repository.get(dataset_id)
+    elif dataset_name is not None:
+        dataset_downloader = DatasetDownloader()
+        if dataset_name == DatasetDownloader.NQ_KEY or dataset_name == 'natural_questions':
+            dataset_path = dataset_downloader.download(DatasetDownloader.NQ_KEY)
+        elif dataset_name == DatasetDownloader.SQUAD_KEY:
+            dataset_path = dataset_downloader.download(DatasetDownloader.SQUAD_KEY)
+        else:
+            logger.warning(f"No such dataset key as '{dataset_name}'")
+            raise ValueError(f"No such dataset key as '{dataset_name}'")
+
+        original_docs, _ = eval_data_from_json(filename=str(dataset_path),
+                                               max_docs=None,
+                                               preprocessor=None)
+
+        split_preprocessor = PreProcessor(split_by='word',
+                                          split_length=200,
+                                          split_overlap=0,
+                                          split_respect_sentence_boundary=False,
+                                          clean_empty_lines=False,
+                                          clean_whitespace=False)
+
+        preprocessed_docs, labels = eval_data_from_json(filename=str(dataset_path),
+                                                        max_docs=None,
+                                                        preprocessor=split_preprocessor)
+        try:
+            # check if already exists with such name - if not -> add uuid
+            corpus = corpus_repository.get_by_name(dataset_name)  # is it working like it should?
+            if corpus is not None:
+                dataset_name += '_'
+                dataset_name += str(uuid.uuid4())
+
+            # Czy .add() i .commit() powinny być w tym miejscu, czy jakoś na końcu?
+
+            corpus = DataCorpus(name=dataset_name)
+            for original_doc in original_docs:
+                Document(original_doc.meta['name'], 'en', corpus)
+
+            dataset = Dataset(name=dataset_name, corpus=corpus)
+            dataset_repository.add(dataset)
+            dataset_repository.commit()
+
+            ELASTICSEARCH_STORAGE.add_dataset(preprocessed_docs=preprocessed_docs,
+                                              preprocessed_labels=labels,
+                                              original_docs=original_docs,
+                                              preprocessed_docs_index=corpus.contexts_index,
+                                              preprocessed_labels_index=dataset.labels_index,
+                                              original_docs_index=corpus.original_documents_index)
+
+            # TODO remove file from disk in case of eventual endpoint?
+
+        except exc.SQLAlchemyError as ex:
+            session.rollback()
+            raise ex
+    else:
+        raise ValueError("In order to evaluate a dataset pass `dataset_id` or `dataset_name`")
+
+
+
+    retriever, reader = _load_qa_models(retriever_type, dpr_question_encoder, dpr_context_encoder, reader_encoder)
+
+    pipeline = QAPipeline(ELASTICSEARCH_STORAGE, retriever, reader)
+    metrics = pipeline.eval(dataset)
+
+    print(metrics)

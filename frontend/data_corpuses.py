@@ -1,6 +1,5 @@
 import streamlit as st
-
-from api import get_data_corpora, upload, create_data_corpus
+from api import get_data_corpora, upload_corpus, create_data_corpus
 
 
 def draw_data_corpuses():
@@ -72,7 +71,7 @@ def draw_data_corpuses():
                 if upload_btn:
                     print("uploading files...")
 
-                    upload(name2corpus[str(corpus_selection)]['id'], list(uploader))
+                    upload_corpus(name2corpus[str(corpus_selection)]['id'], list(uploader))
                     st.experimental_rerun()
 
     with st.expander("Remove a data corpus"):

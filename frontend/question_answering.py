@@ -8,6 +8,7 @@ from markdown import markdown
 from api import (get_data_corpora,
                  get_model_languages,
                  predict_qa)
+from api.utils import language_incompatibility_warning
 from model_selection.selected_models import SelectedModels
 
 logger = logging.getLogger(__name__)
@@ -85,22 +86,7 @@ def draw_question_answering():
             with st.spinner(f"Answering"):
                 runtime_error = False
                 try:
-                    corpus_language = languages.get(alpha2=corpus_to_id[corpus_selection]['language']).name.lower()
-                    model_languages = get_model_languages()
-                    if selected_models.retriever_type.value == 'dpr':
-                        query_encoder_language = model_languages['retriever']['query']
-                        passage_encoder_language = model_languages['retriever']['passage']
-
-                        if corpus_language != query_encoder_language:
-                            st.warning(f'Query encoder\'s language ({query_encoder_language}) '
-                                       f'is not the same as corpus\' ({corpus_language})')
-                        if corpus_language != passage_encoder_language:
-                            st.warning(f'Passage encoder\'s language ({passage_encoder_language}) '
-                                       f'is not the same as corpus\' ({corpus_language})')
-
-                    if corpus_language != model_languages['reader']['encoder']:
-                        st.warning(f'Reader encoder\'s language ({model_languages["reader"]["encoder"]}) '
-                                   f'is not the same as corpus\' ({corpus_language})')
+                    language_incompatibility_warning(corpus_to_id[corpus_selection]['language'], selected_models)
 
                     answers = predict_qa(
                         corpus_id=corpus_to_id[corpus_selection]['id'],

@@ -43,6 +43,7 @@ class IndexedDPR(DensePassageRetriever):
             model_documents_ids = set([doc.id for doc in model_documents])
 
             deleted_ids = model_documents_ids - documents_ids
+            print(len(deleted_ids), deleted_ids)
             document_store.delete_documents(ids=list(deleted_ids), index=model_index_name)
 
         document_store.write_documents(documents, index=model_index_name, duplicate_documents='skip')

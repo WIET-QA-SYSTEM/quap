@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 import io
 
@@ -12,7 +12,7 @@ def get_data_corpora() -> list[dict[str, Any]]:
     return response.json()['corpora']
 
 
-def create_data_corpus(name: str):
+def create_data_corpus(name: str) -> None:
     response = requests.post('http://localhost:9100/data/corpora', json={'name': name})
     if not response.ok:
         pass  # todo do something?
@@ -25,7 +25,7 @@ def get_datasets() -> list[dict[str, Any]]:
     return response.json()['datasets']
 
 
-def upload(corpus_id: UUID, files: list[io.BytesIO]) -> None:
+def upload_corpus(corpus_id: UUID, files: list[io.BytesIO]) -> None:
 
     # todo refactor to send everything as a single request
     for file in files:
@@ -33,3 +33,9 @@ def upload(corpus_id: UUID, files: list[io.BytesIO]) -> None:
                                  files={'file': (file.name, file)})
         if not response.ok:
             pass  # todo do something?
+
+
+def download_dataset(dataset_name: str) -> None:
+    response = requests.post('http://localhost:9100/data/datasets/download', json={'name': dataset_name})
+    if not response.ok:
+        pass  # todo do something?

@@ -26,7 +26,7 @@ class DataCorporaGETResponse(BaseModel):
 class DatasetGETResponse(BaseModel):
     id: UUID
     name: str
-    corpus_id: UUID
+    corpus: DataCorpusGETResponse
 
 
 class DatasetsGETResponse(BaseModel):
@@ -35,4 +35,9 @@ class DatasetsGETResponse(BaseModel):
 
 # ==================== POST data corpora ===================
 class CreateDataCorpusPOSTRequest(BaseModel):
+    name: str
+
+
+# ==================== POST datasets ===================
+class DownloadDatasetPOSTRequest(BaseModel):
     name: str

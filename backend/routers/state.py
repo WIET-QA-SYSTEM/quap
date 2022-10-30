@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from torch.cuda import is_available
+from iso639 import languages
 
 from service.state import ModelState
 from models.state import ModelsLanguagesGETResponse, CudaGETResponse
@@ -21,18 +22,23 @@ async def model_languages():
     reader = model_state.farm_reader
     question_generator = model_state.question_generator
 
-    return {
+    languages_response = {
         'retriever': {
-            'query': dpr_retriever.query_encoder.language if dpr_retriever is not None else None,
-            'context': dpr_retriever.passage_encoder.language if dpr_retriever is not None else None,
+            'query': languages.get(name=dpr_retriever.query_encoder.language.capitalize()).alpha2
+                     if dpr_retriever is not None else None,
+            'context': languages.get(name=dpr_retriever.passage_encoder.language.capitalize()).alpha2
+                       if dpr_retriever is not None else None,
         },
         'reader': {
-            'encoder': reader.inferencer.model.language_model.language if reader is not None else None
+            'encoder': languages.get(name=reader.inferencer.model.language_model.language.capitalize()).alpha2
+                       if reader is not None else None
         },
         'question_generator': {
             'encoder_decoder': None  # fixme how to get it? haven't found any trace of language :)
         }
     }
+    return languages_response
+
 
 @router.get('/cuda', response_model=CudaGETResponse)
 async def is_cuda_available():

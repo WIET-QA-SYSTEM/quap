@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Request
+from fastapi_cache.decorator import cache
+from fastapi_cache.coder import JsonCoder
 from starlette import status
 from sqlalchemy import exc
 
@@ -13,10 +15,15 @@ from repositories import (
     document_repository
 )
 from models.ml import (
-    QuestionAnsweringPOSTRequest,
-    QuestionAnsweringPOSTResponse,
+    QuestionAnsweringModelSpecificationsMixin,
+    QuestionAnsweringInferencePOSTRequest,
+    QuestionAnsweringInferencePOSTResponse,
+    QuestionAnsweringEvaluationPOSTRequest,
+    QuestionAnsweringEvaluationPOSTResponse,
+
+    QuestionGenerationModelSpecificationsMixin,
     QuestionGenerationPOSTRequest,
-    QuestionGenerationPOSTResponse
+    QuestionGenerationPOSTResponse,
 )
 from service.state import ModelState
 
@@ -25,16 +32,10 @@ router = APIRouter(prefix='/ml')
 model_state = ModelState()
 
 
-@router.post('/predict/qa', response_model=QuestionAnsweringPOSTResponse)
-async def predict_qa(request: QuestionAnsweringPOSTRequest):
-    try:
-        corpus = corpus_repository.get(request.corpus_id)
-    except exc.NoResultFound:
-        return Response(status_code=status.HTTP_404_NOT_FOUND)
-
-    # todo check if inference works if retriever and reader is on different devices?
-    retriever_spec = request.retriever_specification
-    reader_spec = request.reader_specification
+def create_qa_pipeline(specifications: QuestionAnsweringModelSpecificationsMixin) -> QAPipeline:
+    # todo check if inference works i retriever and reader is on different devices?
+    retriever_spec = specifications.retriever_specification
+    reader_spec = specifications.reader_specification
     use_gpu = retriever_spec.device == 'gpu' and reader_spec.device == 'gpu'
 
     retriever, reader = model_state.load_qa_models(
@@ -46,6 +47,33 @@ async def predict_qa(request: QuestionAnsweringPOSTRequest):
     )
 
     pipeline = QAPipeline(ELASTICSEARCH_STORAGE, retriever, reader)
+    return pipeline
+
+
+def create_qg_pipeline(specifications: QuestionAnsweringEvaluationPOSTResponse) -> QGPipeline:
+    # todo check if inference works if retriever and reader is on different devices?
+    generator_spec = specifications.question_generator_specification
+    reader_spec = specifications.reader_specification
+    use_gpu = generator_spec.device == 'gpu' and reader_spec.device == 'gpu'
+
+    generator, reader = model_state.load_qg_models(
+        generator=generator_spec.encoder_decoder,
+        reader_encoder=reader_spec.encoder,
+        use_gpu=use_gpu
+    )
+
+    pipeline = QGPipeline(ELASTICSEARCH_STORAGE, generator, reader)
+    return pipeline
+
+
+@router.post('/predict/qa', response_model=QuestionAnsweringInferencePOSTResponse)
+async def predict_qa(request: QuestionAnsweringInferencePOSTRequest):
+    try:
+        corpus = corpus_repository.get(request.corpus_id)
+    except exc.NoResultFound:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+    pipeline = create_qa_pipeline(request)
     all_answers = pipeline(corpus, request.questions)
 
     records = []
@@ -55,7 +83,7 @@ async def predict_qa(request: QuestionAnsweringPOSTRequest):
                 'question': query,
                 'answer': answer.answer,
                 'answer_score': answer.score,
-                'document_name': answer.meta['document_name'],
+                'document_name': answer.meta['name'],
                 'context': answer.context,
                 'context_offset': answer.offsets_in_context[0].start
             })
@@ -70,18 +98,7 @@ async def predict_qg(request: QuestionGenerationPOSTRequest):
     except exc.NoResultFound:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
-    # todo check if inference works if retriever and reader is on different devices?
-    generator_spec = request.question_generator_specification
-    reader_spec = request.reader_specification
-    use_gpu = generator_spec.device == 'gpu' and reader_spec.device == 'gpu'
-
-    generator, reader = model_state.load_qg_models(
-        generator=generator_spec.encoder_decoder,
-        reader_encoder=reader_spec.encoder,
-        use_gpu=use_gpu
-    )
-
-    pipeline = QGPipeline(ELASTICSEARCH_STORAGE, generator, reader)
+    pipeline = create_qg_pipeline(request)
     results = pipeline(corpus)
 
     records = []
@@ -92,9 +109,28 @@ async def predict_qg(request: QuestionGenerationPOSTRequest):
                     'question': qg_result.question,
                     'answer': answer.answer,
                     'answer_score': answer.score,
-                    'document_name': answer.meta['document_name'],
+                    'document_name': answer.meta['name'],
                     'context': answer.context,
                     'context_offset': answer.offsets_in_context[0].start
                 })
 
     return {'records': records}
+
+
+@router.post('/evaluate/qa', response_model=QuestionAnsweringEvaluationPOSTResponse)
+@cache(coder=JsonCoder)
+async def evaluate_qa(evaluation: QuestionAnsweringEvaluationPOSTRequest):
+    try:
+        dataset = dataset_repository.get(evaluation.dataset_id)
+    except exc.NoResultFound:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+    pipeline = create_qa_pipeline(evaluation)
+    # TODO how do we interrupt this? or interrupt evaluation?
+    # TODO should this be another global thread? process? so we can send some signal to it?
+    metrics = pipeline.eval(dataset)
+
+    return {
+        'retriever_metrics': metrics['Retriever'],
+        'reader_metrics': metrics['Reader']
+    }

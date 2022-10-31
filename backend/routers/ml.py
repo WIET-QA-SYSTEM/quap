@@ -7,7 +7,6 @@ from sqlalchemy import exc
 from quap.ml.pipelines import QAPipeline, QGPipeline
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
 
-# todo how to make these relative imports? always had a problem with that
 from repositories import (
     session,
     dataset_repository,
@@ -32,13 +31,13 @@ router = APIRouter(prefix='/ml')
 model_state = ModelState()
 
 
-def create_qa_pipeline(specifications: QuestionAnsweringModelSpecificationsMixin) -> QAPipeline:
+async def create_qa_pipeline(specifications: QuestionAnsweringModelSpecificationsMixin) -> QAPipeline:
     # todo check if inference works i retriever and reader is on different devices?
     retriever_spec = specifications.retriever_specification
     reader_spec = specifications.reader_specification
     use_gpu = retriever_spec.device == 'gpu' and reader_spec.device == 'gpu'
 
-    retriever, reader = model_state.load_qa_models(
+    retriever, reader = await model_state.load_qa_models(
         retriever_type=retriever_spec.retriever_type,
         dpr_question_encoder=retriever_spec.query_encoder,
         dpr_context_encoder=retriever_spec.passage_encoder,
@@ -50,13 +49,13 @@ def create_qa_pipeline(specifications: QuestionAnsweringModelSpecificationsMixin
     return pipeline
 
 
-def create_qg_pipeline(specifications: QuestionAnsweringEvaluationPOSTResponse) -> QGPipeline:
+async def create_qg_pipeline(specifications: QuestionGenerationPOSTRequest) -> QGPipeline:
     # todo check if inference works if retriever and reader is on different devices?
     generator_spec = specifications.question_generator_specification
     reader_spec = specifications.reader_specification
     use_gpu = generator_spec.device == 'gpu' and reader_spec.device == 'gpu'
 
-    generator, reader = model_state.load_qg_models(
+    generator, reader = await model_state.load_qg_models(
         generator=generator_spec.encoder_decoder,
         reader_encoder=reader_spec.encoder,
         use_gpu=use_gpu
@@ -73,7 +72,7 @@ async def predict_qa(request: QuestionAnsweringInferencePOSTRequest):
     except exc.NoResultFound:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
-    pipeline = create_qa_pipeline(request)
+    pipeline = await create_qa_pipeline(request)
     all_answers = pipeline(corpus, request.questions)
 
     records = []
@@ -98,7 +97,7 @@ async def predict_qg(request: QuestionGenerationPOSTRequest):
     except exc.NoResultFound:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
-    pipeline = create_qg_pipeline(request)
+    pipeline = await create_qg_pipeline(request)
     results = pipeline(corpus)
 
     records = []
@@ -125,7 +124,7 @@ async def evaluate_qa(evaluation: QuestionAnsweringEvaluationPOSTRequest):
     except exc.NoResultFound:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
-    pipeline = create_qa_pipeline(evaluation)
+    pipeline = await create_qa_pipeline(evaluation)
     # TODO how do we interrupt this? or interrupt evaluation?
     # TODO should this be another global thread? process? so we can send some signal to it?
     metrics = pipeline.eval(dataset)

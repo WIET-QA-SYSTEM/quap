@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Union
 import logging
+import asyncio
 
 from haystack.nodes import FARMReader, QuestionGenerator
 from quap.document_stores.document_store import ELASTICSEARCH_STORAGE
@@ -24,7 +25,6 @@ class SingletonMeta(type):
         return cls._instances[cls]
 
 
-# todo introduce locks for modifying (may be needed because of async endpoints)
 @dataclass
 class ModelState(metaclass=SingletonMeta):
     bm25_retriever: Optional[IndexedBM25] = None
@@ -32,6 +32,7 @@ class ModelState(metaclass=SingletonMeta):
     farm_reader: Optional[FARMReader] = None
     question_generator: Optional[QuestionGenerator] = None
     use_gpu: bool = False
+    _models_lock = asyncio.Lock()
 
     def _load_retriever(
             self,
@@ -92,7 +93,7 @@ class ModelState(metaclass=SingletonMeta):
 
         return self.question_generator
 
-    def load_qa_models(
+    async def load_qa_models(
             self,
             retriever_type: str = 'dpr',
             dpr_question_encoder: str = 'facebook/dpr-question_encoder-single-nq-base',
@@ -101,29 +102,31 @@ class ModelState(metaclass=SingletonMeta):
             use_gpu: bool = False
     ) -> tuple[Union[IndexedDPR, IndexedBM25], FARMReader]:
 
-        retriever = self._load_retriever(retriever_type, dpr_question_encoder, dpr_context_encoder, use_gpu)
-        reader = self._load_reader(reader_encoder, use_gpu)
-        self.use_gpu = use_gpu
+        async with self._models_lock:
+            retriever = self._load_retriever(retriever_type, dpr_question_encoder, dpr_context_encoder, use_gpu)
+            reader = self._load_reader(reader_encoder, use_gpu)
+            self.use_gpu = use_gpu
 
-        # todo if we want to make this optional, we have to take care of monitoring devices for each model
-        self.clear(generator=True)
+            # todo if we want to make this optional, we have to take care of monitoring devices for each model
+            self.clear(generator=True)
 
-        return retriever, reader
+            return retriever, reader
 
-    def load_qg_models(
+    async def load_qg_models(
             self,
             reader_encoder: str = 'deepset/roberta-base-squad2',
             generator: str = 'valhalla/t5-base-e2e-qg',
             use_gpu: bool = False
     ) -> tuple[QuestionGenerator, FARMReader]:
 
-        generator = self._load_generator(generator, use_gpu)
-        reader = self._load_reader(reader_encoder, use_gpu)
+        async with self._models_lock:
+            generator = self._load_generator(generator, use_gpu)
+            reader = self._load_reader(reader_encoder, use_gpu)
 
-        # todo if we want to make this optional, we have to take care of monitoring devices for each model
-        self.clear(retriever=True)
+            # todo if we want to make this optional, we have to take care of monitoring devices for each model
+            self.clear(retriever=True)
 
-        return generator, reader
+            return generator, reader
 
     def clear(self, retriever: bool = False, reader: bool = False, generator: bool = False) -> None:
         if retriever:

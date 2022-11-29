@@ -180,7 +180,7 @@ async def remove_file_from_corpus(corpus_id: UUID, file_id: UUID):
 
     doc2obj: dict[UUID, Document] = {document.id: document for document in corpus.documents}
     if file_id not in doc2obj.keys():
-        return Response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
 
     existing_doc = doc2obj[file_id]
     document_repository.delete(existing_doc)

@@ -163,3 +163,51 @@ async def download_dataset(request: DownloadDatasetPOSTRequest):
                                       preprocessed_docs=preprocessed_docs,
                                       preprocessed_labels=labels,
                                       original_docs=original_docs)
+
+
+@router.delete('/corpora/{corpus_id}/{file_id}')
+async def remove_file_from_corpus(corpus_id: UUID, file_id: UUID):
+    try:
+        corpus = corpus_repository.get(corpus_id)
+    except exc.NoResultFound:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+    datasets = dataset_repository.list()
+    datasets_corpora_ids = set([dataset.corpus.id for dataset in datasets])
+    if corpus.id in datasets_corpora_ids:
+        # todo message - cannot modify frozen corpora
+        return Response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    doc2obj: dict[UUID, Document] = {document.id: document for document in corpus.documents}
+    if file_id not in doc2obj.keys():
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+    existing_doc = doc2obj[file_id]
+    document_repository.delete(existing_doc)
+
+    ELASTICSEARCH_STORAGE.remove_document(existing_doc)
+
+    document_repository.commit()
+    corpus_repository.commit()
+
+
+@router.delete('/corpora/{corpus_id}')
+async def remove_dataset(corpus_id: UUID):
+    try:
+        corpus = corpus_repository.get(corpus_id)
+    except exc.NoResultFound:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+    datasets = dataset_repository.list()
+    datasets_corpora_ids = set([dataset.corpus.id for dataset in datasets])
+    if corpus.id in datasets_corpora_ids:
+        return Response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    for document in corpus.documents:
+        document_repository.delete(document)
+        ELASTICSEARCH_STORAGE.remove_document(document)
+        document_repository.commit()
+        corpus_repository.commit()
+
+    corpus_repository.remove(corpus_id)
+    corpus_repository.commit()

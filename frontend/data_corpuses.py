@@ -1,5 +1,5 @@
 import streamlit as st
-from api import get_data_corpora, upload_corpus, create_data_corpus
+from api import get_data_corpora, upload_corpus, create_data_corpus, delete_corpus
 
 
 def draw_data_corpuses():
@@ -82,6 +82,6 @@ def draw_data_corpuses():
             remove_btn = st.button("Remove")
 
             if remove_btn:
-                # todo add corpus removal
+                delete_corpus(name2corpus[str(corpus_selection)]['id'])
                 st.warning("Corpus has been removed: " + str(corpus_selection))
                 print("Removing corpus...")

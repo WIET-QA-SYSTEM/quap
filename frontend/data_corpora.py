@@ -2,20 +2,20 @@ import streamlit as st
 from api import get_data_corpora, upload_corpus, create_data_corpus, delete_corpus, delete_file_from_corpus
 
 
-def draw_data_corpuses():
+def draw_data_corpora():
 
-    st.markdown("## Data corpuses")
+    st.markdown("## Data corpora")
 
-    data_corpuses = get_data_corpora()
+    data_corpora = get_data_corpora()
 
     name2documents = {
         corpus['name']: corpus['documents']
-        for corpus in data_corpuses
+        for corpus in data_corpora
     }
 
     name2corpus = {
         corpus['name']: corpus
-        for corpus in data_corpuses
+        for corpus in data_corpora
     }
 
     with st.expander("Add a new data corpus"):

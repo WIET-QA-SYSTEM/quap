@@ -12,4 +12,3 @@ def get_model_list(model_type: ModelType):
     ]
 
     return model_strings
-    

@@ -10,10 +10,10 @@ from frontend.model_selection.selected_models import SelectedModels
 def draw_question_generation():
     st.markdown("## Question generation")
 
-    corpuses = ["Corpus 1", "Corpus 2", "Corpus 3"]
+    corpora = ["Corpus 1", "Corpus 2", "Corpus 3"]
     corpus_objects = get_data_corpora()
 
-    corpuses = [corpus['name'] for corpus in corpus_objects]
+    corpora = [corpus['name'] for corpus in corpus_objects]
 
     corpus_to_id = {
         corpus['name']: corpus['id']
@@ -22,13 +22,13 @@ def draw_question_generation():
 
     last_selected_corpus = st.session_state.get("last_selected_corpus")
 
-    if last_selected_corpus in corpuses:
-        default_corpus_index = corpuses.index(last_selected_corpus)
+    if last_selected_corpus in corpora:
+        default_corpus_index = corpora.index(last_selected_corpus)
     else:
         default_corpus_index = 0
 
     corpus_selection = st.selectbox(
-        "Select data corpus", corpuses, index=default_corpus_index)
+        "Select data corpus", corpora, index=default_corpus_index)
 
     st.session_state['last_selected_corpus'] = corpus_selection
 
@@ -61,7 +61,7 @@ def draw_question_generation():
                     runtime_error = True
 
             if not runtime_error:
-                st.write("### Generated questons and answers")                
+                st.write("### Generated questions and answers")
 
                 st.markdown(    
                     """

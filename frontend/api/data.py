@@ -34,6 +34,15 @@ def upload_corpus(corpus_id: UUID, files: list[io.BytesIO]) -> None:
         if not response.ok:
             pass  # todo do something?
 
+def delete_file_from_corpus(corpus_id: UUID, file_id: UUID) -> None:
+    response = requests.delete(f'http://localhost:9100/data/corpora/{corpus_id}/{file_id}')
+    if not response.ok:
+        pass  # todo do something?
+
+def delete_corpus(corpus_id: UUID) -> None:
+    response = requests.delete(f'http://localhost:9100/data/corpora/{corpus_id}')
+    if not response.ok:
+        pass  # todo do something?
 
 def download_dataset(dataset_name: str) -> None:
     response = requests.post('http://localhost:9100/data/datasets/download', json={'name': dataset_name})

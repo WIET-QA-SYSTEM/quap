@@ -26,6 +26,10 @@ class DataCorpusRepository(BaseSQLAlchemyRepository):
     def get_by_name(self, name: str) -> DataCorpus:
         return self.session.query(DataCorpus).filter_by(name=name).one()
 
+    def remove(self, id: UUID) -> None:
+        corpus = self.get(id)
+        return self.session.delete(corpus)
+
     def list(self) -> list[DataCorpus]:
         return self.session.query(DataCorpus).all()
 

@@ -189,12 +189,25 @@ async def remove_file_from_corpus(corpus_id: UUID, file_id: UUID):
 
     document_repository.commit()
     corpus_repository.commit()
-'''
+
+
 @router.delete('/corpora/{corpus_id}')
 async def remove_dataset(corpus_id: UUID):
     try:
-        corpus_repository.remove(corpus_id)
+        corpus = corpus_repository.get(corpus_id)
     except exc.NoResultFound:
-        pass
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-'''
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+    datasets = dataset_repository.list()
+    datasets_corpora_ids = set([dataset.corpus.id for dataset in datasets])
+    if corpus.id in datasets_corpora_ids:
+        return Response(status_code=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    for document in corpus.documents:
+        document_repository.delete(document)
+        ELASTICSEARCH_STORAGE.remove_document(document)
+        document_repository.commit()
+        corpus_repository.commit()
+
+    corpus_repository.remove(corpus_id)
+    corpus_repository.commit()

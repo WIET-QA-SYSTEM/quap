@@ -1,21 +1,21 @@
 import streamlit as st
-from api import get_data_corpora, upload_corpus, create_data_corpus
+from api import get_data_corpora, upload_corpus, create_data_corpus, delete_corpus, delete_file_from_corpus
 
 
-def draw_data_corpuses():
+def draw_data_corpora():
 
-    st.markdown("## Data corpuses")
+    st.markdown("## Data corpora")
 
-    data_corpuses = get_data_corpora()
+    data_corpora = get_data_corpora()
 
     name2documents = {
         corpus['name']: corpus['documents']
-        for corpus in data_corpuses
+        for corpus in data_corpora
     }
 
     name2corpus = {
         corpus['name']: corpus
-        for corpus in data_corpuses
+        for corpus in data_corpora
     }
 
     with st.expander("Add a new data corpus"):
@@ -54,8 +54,9 @@ def draw_data_corpuses():
                             "Delete", key=f"delete_{document['name']}_{corpus_selection}")
 
                     if del_btn:
-                        # TODO file removal
-                        pass
+                        delete_file_from_corpus(name2corpus[str(corpus_selection)]['id'], document['id'])
+                        st.warning("Corpus has been removed: " + str(corpus_selection))
+                        print("Removing corpus...")
 
             st.markdown("***")
             st.write("Upload new files to the data corpus")
@@ -78,10 +79,10 @@ def draw_data_corpuses():
         corpus_selection = st.selectbox(
             "Select a data corpus for removal", name2corpus.keys())
 
-        if corpus_selection != None:
+        if corpus_selection is not None:
             remove_btn = st.button("Remove")
 
             if remove_btn:
-                # todo add corpus removal
+                delete_corpus(name2corpus[str(corpus_selection)]['id'])
                 st.warning("Corpus has been removed: " + str(corpus_selection))
                 print("Removing corpus...")

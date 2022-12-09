@@ -1,6 +1,6 @@
 import streamlit as st
 
-from data_corpuses import draw_data_corpuses
+from data_corpora import draw_data_corpora
 from evaluation import draw_evaluation
 from model_selection.model_selection import draw_model_selection
 from model_selection.selected_models import SelectedModels
@@ -26,5 +26,5 @@ elif selection == "Model evaluation":
     draw_evaluation()
 elif selection == 'Model selection':
     draw_model_selection(selected_models)
-elif selection == "Data corpuses":
-    draw_data_corpuses()
+elif selection == "Data corpora":
+    draw_data_corpora()

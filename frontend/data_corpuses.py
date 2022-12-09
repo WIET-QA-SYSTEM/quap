@@ -1,5 +1,5 @@
 import streamlit as st
-from api import get_data_corpora, upload_corpus, create_data_corpus, delete_corpus
+from api import get_data_corpora, upload_corpus, create_data_corpus, delete_corpus, delete_file_from_corpus
 
 
 def draw_data_corpuses():
@@ -54,8 +54,9 @@ def draw_data_corpuses():
                             "Delete", key=f"delete_{document['name']}_{corpus_selection}")
 
                     if del_btn:
-                        # TODO file removal
-                        pass
+                        delete_file_from_corpus(name2corpus[str(corpus_selection)]['id'], document['id'])
+                        st.warning("Corpus has been removed: " + str(corpus_selection))
+                        print("Removing corpus...")
 
             st.markdown("***")
             st.write("Upload new files to the data corpus")
@@ -78,7 +79,7 @@ def draw_data_corpuses():
         corpus_selection = st.selectbox(
             "Select a data corpus for removal", name2corpus.keys())
 
-        if corpus_selection != None:
+        if corpus_selection is not None:
             remove_btn = st.button("Remove")
 
             if remove_btn:

@@ -1,8 +1,8 @@
-from typing import Union
+import requests
+import os
 from collections import defaultdict
 from uuid import UUID
-
-import requests
+from typing import Union
 
 
 def predict_qg(
@@ -15,17 +15,20 @@ def predict_qg(
     answers_per_pair=3
 ) -> dict[str, dict[str, list[dict[str, Union[str, int]]]]]:
 
-    response = requests.post('http://localhost:9100/ml/predict/qg', json={
-        "corpus_id": str(corpus_id),
-        "reader_specification": {
-            "encoder": reader_encoder,
-            "device": device
-        },
-        "question_generator_specification": {
-            "encoder_decoder": generator,
-            "device": device
+    response = requests.post(
+        f'http://{os.environ["BACKEND_HOST"]}:{os.environ["BACKEND_PORT"]}/ml/predict/qg',
+        json={
+            "corpus_id": str(corpus_id),
+            "reader_specification": {
+                "encoder": reader_encoder,
+                "device": device
+            },
+            "question_generator_specification": {
+                "encoder_decoder": generator,
+                "device": device
+            }
         }
-    })
+    )
 
     if not response.ok:
         pass  # todo do something?
@@ -55,20 +58,23 @@ def predict_qa(
     if isinstance(questions, str):
         questions = [questions]
 
-    response = requests.post('http://localhost:9100/ml/predict/qa', json={
-        "corpus_id": str(corpus_id),
-        "questions": questions,
-        "retriever_specification": {
-            "retriever_type": retriever_type,
-            "query_encoder": dpr_question_encoder,
-            "passage_encoder": dpr_context_encoder,
-            "device": device
-        },
-        "reader_specification": {
-            "encoder": reader_encoder,
-            "device": device
+    response = requests.post(
+        f'http://{os.environ["BACKEND_HOST"]}:{os.environ["BACKEND_PORT"]}/ml/predict/qa',
+        json={
+            "corpus_id": str(corpus_id),
+            "questions": questions,
+            "retriever_specification": {
+                "retriever_type": retriever_type,
+                "query_encoder": dpr_question_encoder,
+                "passage_encoder": dpr_context_encoder,
+                "device": device
+            },
+            "reader_specification": {
+                "encoder": reader_encoder,
+                "device": device
+            }
         }
-    })
+    )
 
     if not response.ok:
         print(response.text)
@@ -92,19 +98,22 @@ def evaluate(
     params: dict = None
 ) -> dict[str, dict[str, float]]:
 
-    response = requests.post('http://localhost:9100/ml/evaluate/qa', json={
-        "dataset_id": str(dataset_id),
-        "retriever_specification": {
-            "retriever_type": retriever_type,
-            "query_encoder": dpr_question_encoder,
-            "passage_encoder": dpr_context_encoder,
-            "device": device
-        },
-        "reader_specification": {
-            "encoder": reader_encoder,
-            "device": device
+    response = requests.post(
+        f'http://{os.environ["BACKEND_HOST"]}:{os.environ["BACKEND_PORT"]}/ml/evaluate/qa',
+        json={
+            "dataset_id": str(dataset_id),
+            "retriever_specification": {
+                "retriever_type": retriever_type,
+                "query_encoder": dpr_question_encoder,
+                "passage_encoder": dpr_context_encoder,
+                "device": device
+            },
+            "reader_specification": {
+                "encoder": reader_encoder,
+                "device": device
+            }
         }
-    })
+    )
 
     if not response.ok:
         print(response.text)

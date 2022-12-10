@@ -1,4 +1,5 @@
 import requests
+import os
 
 
 def load_qa_models(
@@ -9,18 +10,21 @@ def load_qa_models(
     device: str = 'cpu'
 ) -> None:
 
-    response = requests.put('http://localhost:9100/state/models', json={
-        "retriever_specification": {
-            "retriever_type": retriever_type,
-            "query_encoder": dpr_question_encoder,
-            "passage_encoder": dpr_context_encoder,
-            "device": device
-        },
-        "reader_specification": {
-            "encoder": reader_encoder,
-            "device": device
+    response = requests.put(
+        f'http://{os.environ["BACKEND_HOST"]}:{os.environ["BACKEND_PORT"]}/state/models',
+        json={
+            "retriever_specification": {
+                "retriever_type": retriever_type,
+                "query_encoder": dpr_question_encoder,
+                "passage_encoder": dpr_context_encoder,
+                "device": device
+            },
+            "reader_specification": {
+                "encoder": reader_encoder,
+                "device": device
+            }
         }
-    })
+    )
 
     if not response.ok:
         print(response.text)
@@ -33,16 +37,19 @@ def load_qg_models(
     device: str = 'cpu'
 ) -> None:
 
-    response = requests.put('http://localhost:9100/state/models', json={
-        "reader_specification": {
-            "encoder": reader_encoder,
-            "device": device
-        },
-        "question_generator_specification": {
-            "encoder_decoder": generator,
-            "device": device
+    response = requests.put(
+        f'http://{os.environ["BACKEND_HOST"]}:{os.environ["BACKEND_PORT"]}/state/models',
+        json={
+            "reader_specification": {
+                "encoder": reader_encoder,
+                "device": device
+            },
+            "question_generator_specification": {
+                "encoder_decoder": generator,
+                "device": device
+            }
         }
-    })
+    )
 
     if not response.ok:
         print(response.text)
@@ -50,14 +57,14 @@ def load_qg_models(
 
 
 def get_model_languages() -> dict[str, dict[str, str]]:
-    response = requests.get('http://localhost:9100/state/models/languages')
+    response = requests.get(f'http://{os.environ["BACKEND_HOST"]}:{os.environ["BACKEND_PORT"]}/state/models/languages')
     if not response.ok:
         pass  # todo do something?
     return response.json()
 
 
 def is_cuda_available() -> bool:
-    response = requests.get('http://localhost:9100/state/cuda')
+    response = requests.get(f'http://{os.environ["BACKEND_HOST"]}:{os.environ["BACKEND_PORT"]}/state/cuda')
     if not response.ok:
         pass  # todo do something?
 

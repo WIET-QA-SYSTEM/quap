@@ -18,6 +18,12 @@ while ! nc -z $ELASTICSEARCH_HOST $ELASTICSEARCH_PORT; do
 done
 echo "ElasticSearch launched"
 
+echo "Waiting for Redis to launch on $REDIS_PORT..."
+while ! nc -z $REDIS_HOST $REDIS_PORT; do
+  sleep 1
+done
+echo "Redis launched"
+
 
 echo "Launching the server"
-streamlit run web/site.py --server.address='0.0.0.0' --server.port=9100 --theme.base='dark'
+uvicorn app:app --host 0.0.0.0 --port 9100

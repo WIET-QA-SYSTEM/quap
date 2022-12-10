@@ -6,8 +6,8 @@ while ! nc -z $TIKA_HOST $TIKA_PORT; do
 done
 echo "Tika launched"
 
-echo "Waiting for PostgreSQL to launch on $POSTGRESQL_PORT..."
-while ! nc -z $POSTGRESQL_HOST $POSTGRESQL_PORT; do
+echo "Waiting for PostgreSQL to launch on $POSTGRES_PORT..."
+while ! nc -z $POSTGRES_HOST $POSTGRES_PORT; do
   sleep 1
 done
 echo "PostgreSQL launched"

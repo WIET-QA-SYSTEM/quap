@@ -16,6 +16,6 @@ fastapi~=0.85.1
 pydantic~=1.9.2
 starlette~=0.20.4
 fastapi-cache2[redis]==0.1.9
+python-multipart==0.0.5
 
-torch==1.12 # keep torch at the bottom of the list to allow canceling in case of 
-# cuda mismatch
+torch==1.12 # keep torch at the bottom of the list to allow canceling in case of cuda mismatch

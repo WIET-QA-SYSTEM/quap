@@ -24,6 +24,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 
 WORKDIR /packages/quap
+COPY backend/requirements.txt requirements.txt
 COPY quap quap
 COPY setup.py .
 

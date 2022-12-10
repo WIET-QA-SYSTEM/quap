@@ -66,13 +66,13 @@ services:
       - tika
       - postgresql
       - redis
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: 1
+#              capabilities: [ gpu ]
     ports:
       - 9100:9100
     environment:
@@ -80,8 +80,8 @@ services:
       - ELASTICSEARCH_PORT=9200
       - TIKA_HOST=quap-tika
       - TIKA_PORT=9998
-      - POSTGRESQL_HOST=quap-postgresql
-      - POSTGRESQL_PORT=5432
+      - POSTGRES_HOST=quap-postgresql
+      - POSTGRES_PORT=5432
       - REDIS_HOST=quap-redis
       - REDIS_PORT=6379
     networks:

@@ -24,4 +24,4 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY frontend .
 
-CMD ["streamlit", "run", "site.py", "--server.port=9000", "--theme.base='dark'"]
+CMD ["streamlit", "run", "site.py", "--server.port=9000", "--theme.base=dark"]

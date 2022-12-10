@@ -4,7 +4,7 @@ import logging
 from api import get_data_corpora, predict_qg
 from markdown import markdown
 from annotated_text import annotation
-from frontend.model_selection.selected_models import SelectedModels
+from model_selection.selected_models import SelectedModels
 
 
 def draw_question_generation():

@@ -6,3 +6,4 @@ streamlit-option-menu==0.3.2
 st-annotated-text==3.0.0
 Markdown==3.4.1
 iso-639==0.4.5
+huggingface-hub==0.6.0

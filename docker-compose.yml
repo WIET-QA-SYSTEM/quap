@@ -18,7 +18,7 @@ services:
       - "discovery.type=single-node"
       - "xpack.security.enabled=false"
     networks:
-      - quap_net
+      - backend-network
 
   tika:
     image: apache/tika:latest
@@ -27,7 +27,7 @@ services:
     ports:
       - 9998:9998
     networks:
-      - quap_net
+      - backend-network
 
   postgresql:
     image: postgres
@@ -42,7 +42,7 @@ services:
     volumes:
       - quap_volume_postgres_data:/var/lib/postgresql/data/
     networks:
-      - quap_net
+      - backend-network
 
   redis:
     image: redis
@@ -53,36 +53,49 @@ services:
     volumes:
       - quap_volume_redis_data:/data
     networks:
-      - quap_net
+      - backend-network
 
-#  app:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    container_name: quap-app
-#    depends_on:
-#      - elasticsearch
-#      - tika
-#      - postgresql
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              count: 1
-#              capabilities: [ gpu ]
-#    ports:
-#      - 9100:9100
-#    environment:
-#        - ELASTICSEARCH_HOST=quap-elasticsearch
-#        - ELASTICSEARCH_PORT=9200
-#        - TIKA_HOST=quap-tika
-#        - TIKA_PORT=9998
-#        - POSTGRESQL_HOST=quap-postgresql
-#        - POSTGRESQL_PORT=5432
-#    # todo volume for cache
-#    networks:
-#      - quap_net
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: quap-backend
+    hostname: quap-backend
+    depends_on:
+      - elasticsearch
+      - tika
+      - postgresql
+      - redis
+    ports:
+      - 9100:9100
+    environment:
+      - ELASTICSEARCH_HOST=quap-elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - TIKA_HOST=quap-tika
+      - TIKA_PORT=9998
+      - POSTGRES_HOST=quap-postgresql
+      - POSTGRES_PORT=5432
+      - REDIS_HOST=quap-redis
+      - REDIS_PORT=6379
+    networks:
+      - backend-network
+      - frontend-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: quap-frontend
+    hostname: quap-frontend
+    depends_on:
+      - backend
+    ports:
+      - 9000:9000
+    environment:
+      - BACKEND_HOST=quap-backend
+      - BACKEND_PORT=9100
+    networks:
+      - frontend-network
 
 
 volumes:
@@ -91,5 +104,7 @@ volumes:
   quap_volume_redis_data:
 
 networks:
-  quap_net:
+  backend-network:
+    driver: bridge
+  frontend-network:
     driver: bridge

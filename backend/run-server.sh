@@ -6,8 +6,8 @@ while ! nc -z $TIKA_HOST $TIKA_PORT; do
 done
 echo "Tika launched"
 
-echo "Waiting for PostgreSQL to launch on $POSTGRESQL_PORT..."
-while ! nc -z $POSTGRESQL_HOST $POSTGRESQL_PORT; do
+echo "Waiting for PostgreSQL to launch on $POSTGRES_PORT..."
+while ! nc -z $POSTGRES_HOST $POSTGRES_PORT; do
   sleep 1
 done
 echo "PostgreSQL launched"
@@ -18,6 +18,12 @@ while ! nc -z $ELASTICSEARCH_HOST $ELASTICSEARCH_PORT; do
 done
 echo "ElasticSearch launched"
 
+echo "Waiting for Redis to launch on $REDIS_PORT..."
+while ! nc -z $REDIS_HOST $REDIS_PORT; do
+  sleep 1
+done
+echo "Redis launched"
+
 
 echo "Launching the server"
-streamlit run web/site.py --server.address='0.0.0.0' --server.port=9100 --theme.base='dark'
+uvicorn app:app --host 0.0.0.0 --port 9100

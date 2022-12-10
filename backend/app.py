@@ -8,8 +8,8 @@ from fastapi_cache.backends.redis import RedisBackend
 import uvicorn
 from redis import asyncio as aioredis
 
-import routers
 from settings import settings
+import routers
 
 
 logging.config.dictConfig(

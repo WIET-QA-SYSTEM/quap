@@ -1,0 +1,9 @@
+python-dotenv==0.21.0
+setuptools~=50.3.1
+requests~=2.24.0
+streamlit==1.13.0
+streamlit-option-menu==0.3.2
+st-annotated-text==3.0.0
+Markdown==3.4.1
+iso-639==0.4.5
+huggingface-hub==0.6.0

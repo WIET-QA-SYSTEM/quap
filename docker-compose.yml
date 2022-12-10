@@ -66,13 +66,6 @@ services:
       - tika
       - postgresql
       - redis
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              count: 1
-#              capabilities: [ gpu ]
     ports:
       - 9100:9100
     environment:

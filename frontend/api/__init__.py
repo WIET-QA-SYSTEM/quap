@@ -1,4 +1,4 @@
-from .state import get_model_languages, is_cuda_available
+from .state import get_model_languages, is_cuda_available, load_qa_models, load_qg_models
 
 from .data import (
     upload_corpus,

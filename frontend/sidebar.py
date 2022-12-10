@@ -63,7 +63,7 @@ class Sidebar:
                 "Question generation",
                 "Model evaluation",
                 "Model selection",
-                "Data corpuses"
+                "Data corpora"
             ], icons = [
                 'question-circle',
                 'brush',

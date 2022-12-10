@@ -7,6 +7,7 @@ from markdown import markdown
 
 from api import (get_data_corpora,
                  get_model_languages,
+                 load_qa_models,
                  predict_qa)
 from api.utils import language_incompatibility_warning
 from model_selection.selected_models import SelectedModels
@@ -86,6 +87,14 @@ def draw_question_answering():
             with st.spinner(f"Answering"):
                 runtime_error = False
                 try:
+                    load_qa_models(
+                        retriever_type=selected_models.retriever_type.value,
+                        dpr_question_encoder=selected_models.dpr_query,
+                        dpr_context_encoder=selected_models.dpr_context,
+                        reader_encoder=selected_models.reader,
+                        device=st.session_state.get('device', 'cpu')
+                    )
+
                     language_incompatibility_warning(corpus_to_id[corpus_selection]['language'], selected_models)
 
                     answers = predict_qa(

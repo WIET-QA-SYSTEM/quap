@@ -2,7 +2,7 @@ import logging
 
 import streamlit as st
 
-from api import get_datasets, evaluate
+from api import get_datasets, evaluate, load_qa_models
 from api.utils import language_incompatibility_warning
 from model_selection.selected_models import SelectedModels
 
@@ -65,6 +65,15 @@ def draw_evaluation():
                 runtime_error = False
                 try:
                     corpus_language = name_to_dataset[dataset_selection]['corpus']['language']
+
+                    load_qa_models(
+                        retriever_type=selected_models.retriever_type.value,
+                        dpr_question_encoder=selected_models.dpr_query,
+                        dpr_context_encoder=selected_models.dpr_context,
+                        reader_encoder=selected_models.reader,
+                        device=st.session_state.get('device', 'cpu')
+                    )
+
                     language_incompatibility_warning(corpus_language, selected_models)
 
                     metrics = evaluate(
